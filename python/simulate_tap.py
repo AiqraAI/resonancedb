@@ -6,7 +6,7 @@ def simulate_tap(frequency, damping, duration=2.0, sample_rate=1000):
     signal = np.exp(-damping * t) * np.sin(2 * np.pi * frequency * t)
     return signal
 
-# Materials: frequency and damping based on real-world trends
+# Materials
 materials = {
     "glass": {"frequency": 800, "damping": 0.4},
     "wood": {"frequency": 300, "damping": 1.5},
@@ -15,13 +15,16 @@ materials = {
 }
 
 sample_rate = 1000
-data_dir = "../data/simulated"
+
+# ✅ Fixed: Save to aiqra/data/simulated/
+data_dir = os.path.join(os.path.dirname(__file__), "..", "data", "simulated")
 os.makedirs(data_dir, exist_ok=True)
 
 for name, props in materials.items():
     signal = simulate_tap(props["frequency"], props["damping"], sample_rate=sample_rate)
+    file_path = os.path.join(data_dir, f"{name}.npz")
     np.savez(
-        f"{data_dir}/{name}.npz",
+        file_path,
         vibration=signal,
         sample_rate_hz=sample_rate,
         material=name,
@@ -29,4 +32,4 @@ for name, props in materials.items():
         damping=props["damping"],
         dominant_frequency=props["frequency"]
     )
-    print(f"✅ Generated simulated/{name}.npz")
+    print(f"✅ Generated {file_path}")
