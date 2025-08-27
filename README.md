@@ -136,13 +136,13 @@ resonancedb/
 ---
 
 ## 📄 License
-MIT License — use freely, even commercially.  
+MIT License - use freely, even commercially.  
 We only ask: **contribute back what you learn**.
 
 ---
 
 ## 🚀 Powered by AIQRA AI
-This project is led by **[AIQRA AI](https://aiqra.ai)** — advancing open physical intelligence.  
+This project is led by **[AIQRA AI](https://aiqra.ai)** - advancing open physical intelligence.  
 Want to collaborate? Contact: info@aiqra.ai
 
 ---
@@ -156,4 +156,4 @@ _The first tap is free. The knowledge is forever._
 
 
 Welcome to the resonance revolution.  
-— From AIQRA AI 💥
+- From AIQRA AI 💥
