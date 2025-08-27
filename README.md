@@ -21,9 +21,9 @@ When you tap a surface, glass, wood, metal, plastic, it vibrates in a unique way
 - Load
 - Structural health (cracks, delamination)
 
-ResonanceDB collects these signals — with metadata — to train AI models that let machines **"feel" without touching**, or **understand matter through sound and motion**.
+ResonanceDB collects these signals, with metadata, to train AI models that let machines **"feel" without touching**, or **understand matter through sound and motion**.
 
-🎯 **Goal**: Create a **Wikipedia of Vibration** — open, collaborative, and machine-readable.
+🎯 **Goal**: Create a **Wikipedia of Vibration**, open, collaborative, and machine-readable.
 
 ---
 
@@ -33,7 +33,7 @@ ResonanceDB collects these signals — with metadata — to train AI models that
 2. **Record** vibration using a low-cost sensor (e.g., ESP32 + MPU-6050).
 3. **Tag** with metadata (material, temp, thickness, etc.).
 4. **Submit** to ResonanceDB.
-5. **Train AI** to recognize patterns — and share models back.
+5. **Train AI** to recognize patterns, and share models back.
 
 ```text
 [TAP] → Accelerometer → Signal → FFT → AI Model → "That’s tempered glass at 22°C"
