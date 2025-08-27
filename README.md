@@ -143,7 +143,7 @@ We only ask: **contribute back what you learn**.
 
 ## 🚀 Powered by AIQRA AI
 This project is led by **[AIQRA AI](https://aiqra.ai)** — advancing open physical intelligence.  
-Want to collaborate? Contact: hello@aiqra.ai
+Want to collaborate? Contact: info@aiqra.ai
 
 ---
 
