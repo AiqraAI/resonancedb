@@ -51,7 +51,7 @@ ResonanceDB collects these signals — with metadata — to train AI models that
 
 ### 2. Flash the Firmware
 ```bash
-git clone https://github.com/aiqra-ai/resonancedb.git
+git clone https://github.com/AiqraAI/resonancedb.git
 cd resonancedb/firmware/esp32-tap-recorder
 # Upload to your ESP32 using Arduino IDE or PlatformIO
 ```
