@@ -3,9 +3,9 @@
 **The Open Database of How Everything Vibrates**  
 *By [AIQRA AI](https://aiqra.ai)*
 
-> 🧠 _"Teaching machines to feel the world — one tap at a time."_  
+> 🧠 _"Teaching machines to feel the world, one tap at a time."_  
 
-ResonanceDB is an **open-source initiative** to build the world’s first universal **vibration fingerprint database** — enabling AI, robots, and IoT devices to identify materials, detect structural flaws, and understand physical properties through vibration.
+ResonanceDB is an **open-source initiative** to build the world’s first universal **vibration fingerprint database**  enabling AI, robots, and IoT devices to identify materials, detect structural flaws, and understand physical properties through vibration.
 
 We believe that **every object has a voice**. When you tap it, it sings.  
 We’re here to **listen, learn, and share**.
@@ -14,7 +14,7 @@ We’re here to **listen, learn, and share**.
 
 ## 🔍 What Is ResonanceDB?
 
-When you tap a surface — glass, wood, metal, plastic — it vibrates in a unique way. These **vibration signatures** (resonant frequencies, damping, harmonics) reveal:
+When you tap a surface, glass, wood, metal, plastic, it vibrates in a unique way. These **vibration signatures** (resonant frequencies, damping, harmonics) reveal:
 - Material type
 - Temperature
 - Thickness
