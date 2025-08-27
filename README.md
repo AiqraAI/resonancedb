@@ -3,9 +3,9 @@
 **The Open Database of How Everything Vibrates**  
 *By [AIQRA AI](https://aiqra.ai)*
 
-> 🧠 _"Teaching machines to feel the world — one tap at a time."_  
+> 🧠 _"Teaching machines to feel the world, one tap at a time."_  
 
-ResonanceDB is an **open-source initiative** to build the world’s first universal **vibration fingerprint database** — enabling AI, robots, and IoT devices to identify materials, detect structural flaws, and understand physical properties through vibration.
+ResonanceDB is an **open-source initiative** to build the world’s first universal **vibration fingerprint database**  enabling AI, robots, and IoT devices to identify materials, detect structural flaws, and understand physical properties through vibration.
 
 We believe that **every object has a voice**. When you tap it, it sings.  
 We’re here to **listen, learn, and share**.
@@ -14,16 +14,16 @@ We’re here to **listen, learn, and share**.
 
 ## 🔍 What Is ResonanceDB?
 
-When you tap a surface — glass, wood, metal, plastic — it vibrates in a unique way. These **vibration signatures** (resonant frequencies, damping, harmonics) reveal:
+When you tap a surface, glass, wood, metal, plastic, it vibrates in a unique way. These **vibration signatures** (resonant frequencies, damping, harmonics) reveal:
 - Material type
 - Temperature
 - Thickness
 - Load
 - Structural health (cracks, delamination)
 
-ResonanceDB collects these signals — with metadata — to train AI models that let machines **"feel" without touching**, or **understand matter through sound and motion**.
+ResonanceDB collects these signals, with metadata, to train AI models that let machines **"feel" without touching**, or **understand matter through sound and motion**.
 
-🎯 **Goal**: Create a **Wikipedia of Vibration** — open, collaborative, and machine-readable.
+🎯 **Goal**: Create a **Wikipedia of Vibration**, open, collaborative, and machine-readable.
 
 ---
 
@@ -33,7 +33,7 @@ ResonanceDB collects these signals — with metadata — to train AI models that
 2. **Record** vibration using a low-cost sensor (e.g., ESP32 + MPU-6050).
 3. **Tag** with metadata (material, temp, thickness, etc.).
 4. **Submit** to ResonanceDB.
-5. **Train AI** to recognize patterns — and share models back.
+5. **Train AI** to recognize patterns, and share models back.
 
 ```text
 [TAP] → Accelerometer → Signal → FFT → AI Model → "That’s tempered glass at 22°C"
@@ -136,13 +136,13 @@ resonancedb/
 ---
 
 ## 📄 License
-MIT License — use freely, even commercially.  
+MIT License - use freely, even commercially.  
 We only ask: **contribute back what you learn**.
 
 ---
 
 ## 🚀 Powered by AIQRA AI
-This project is led by **[AIQRA AI](https://aiqra.ai)** — advancing open physical intelligence.  
+This project is led by **[AIQRA AI](https://aiqra.ai)** - advancing open physical intelligence.  
 Want to collaborate? Contact: info@aiqra.ai
 
 ---
@@ -156,4 +156,4 @@ _The first tap is free. The knowledge is forever._
 
 
 Welcome to the resonance revolution.  
-— From AIQRA AI 💥
+- From AIQRA AI 💥
