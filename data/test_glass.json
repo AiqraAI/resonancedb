@@ -1,0 +1,7 @@
+{
+  "material": "glass",
+  "vibration": [0.01, -0.08, 0.06, 0.15, -0.12, 0.08],
+  "sample_rate_hz": 1000,
+  "excitation": "light_tap",
+  "source": "simulation"
+}

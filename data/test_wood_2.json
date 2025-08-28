@@ -1,0 +1,7 @@
+{
+  "material": "wood",
+  "vibration": [0.02, -0.05, 0.03, -0.02, 0.01],
+  "sample_rate_hz": 1000,
+  "excitation": "manual_tap",
+  "source": "simulation"
+}
