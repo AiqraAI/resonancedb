@@ -4,12 +4,13 @@ import os
 from pathlib import Path
 
 def validate_sample(file_path):
-    if not os.path.exists(file_path):
+    fp = Path(file_path)
+    if not fp.exists():
         print(f"❌ File not found: {file_path}")
         return False
 
     try:
-        with open(file_path, 'r') as f:
+        with fp.open('r') as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
         print(f"❌ Invalid JSON in {file_path}: {e}")
@@ -66,7 +67,7 @@ def validate_sample(file_path):
     if valid:
         print(f"✅ Validated: {data['material']} ({len(data['vibration'])} samples)")
     else:
-        print(f"❌ Failed validation: {file_path.name}")
+        print(f"❌ Failed validation: {fp.name}")
 
     return valid
 

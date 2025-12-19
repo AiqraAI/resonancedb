@@ -5,8 +5,19 @@ from pathlib import Path
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from python.features import compute_feature_vector
+import joblib
 
-def load_data(data_dir):
+def load_data(
+    data_dir,
+    *,
+    extra=False,
+    top_k_peaks: int = 3,
+    detrend: bool | None = None,
+    window: str | None = None,
+    target_length: int | None = None,
+    resample_rate_hz: float | None = None,
+):
     features = []
     labels = []
     data_path = Path(data_dir)
@@ -58,22 +69,23 @@ def load_data(data_dir):
             # Convert to numpy array
             signal = np.array(vibration)
 
-            # Feature 1: Dominant frequency
-            fft_vals = np.abs(np.fft.fft(signal))
-            freqs = np.fft.fftfreq(len(signal), 1/sample_rate)
-            half = len(fft_vals) // 2
-            peak_idx = np.argmax(fft_vals[:half])
-            peak_freq = freqs[peak_idx]
-
-            # Feature 2: Decay rate (damping)
-            envelope = np.abs(signal)
-            log_env = np.log(envelope + 1e-8)
-            decay_rate = -np.polyfit(np.arange(len(log_env)), log_env, 1)[0]
-
-            # Feature 3: Energy
-            energy = np.sum(signal ** 2)
-
-            features.append([peak_freq, decay_rate, energy])
+            # Unified feature extraction with preprocess and optional extras
+            # Default behavior: if detrend/window are None, use standard defaults (True/'hann')
+            detrend_flag = True if detrend is None else bool(detrend)
+            window_name = "hann" if (window is None or window == "hann") else None
+            vec = compute_feature_vector(
+                signal,
+                sample_rate,
+                detrend=detrend_flag,
+                window=window_name,
+                target_length=target_length,
+                resample_rate_hz=resample_rate_hz,
+                extra=extra,
+                top_k_peaks=top_k_peaks,
+            )
+            peak_freq, decay_rate, energy = vec[:3].tolist()
+            # Use full vector to keep model features consistent when extras are enabled
+            features.append(vec.tolist())
             labels.append(material)
 
             print(f"  ✅ Extracted: {material} | {peak_freq:.1f} Hz | decay={decay_rate:.3f} | energy={energy:.3f}")
@@ -92,39 +104,42 @@ def load_data(data_dir):
 
 # --- MAIN ---
 if __name__ == "__main__":
-    X, y = load_data("data")  # Looks inside the current folder
+    # Allow training via CLI or direct execution
+    def _train_default():
+        X, y = load_data("data")  # Looks inside the current folder
 
-    if len(X) == 0:
-        print("🛑 Training aborted: no data to learn from.")
-        exit(1)
+        if len(X) == 0:
+            print("🛑 Training aborted: no data to learn from.")
+            exit(1)
 
-    # Split and train
-    try:
-        # Only stratify if we have enough samples per class
-        stratify = None
-        if len(set(y)) > 1:  # Multiple classes exist
-            class_counts = np.bincount([list(set(y)).index(label) for label in y])
-            if min(class_counts) >= 2:  # At least 2 samples per class
-                stratify = y
+        # Split and train
+        try:
+            # Only stratify if we have enough samples per class
+            stratify = None
+            if len(set(y)) > 1:  # Multiple classes exist
+                class_counts = np.bincount([list(set(y)).index(label) for label in y])
+                if min(class_counts) >= 2:  # At least 2 samples per class
+                    stratify = y
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.3, random_state=42, stratify=stratify
-        )
-    except ValueError as e:
-        print(f"❌ Split failed: {e}")
-        print("💡 Try adding more samples (at least 2 different materials)")
-        exit(1)
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.3, random_state=42, stratify=stratify
+            )
+        except ValueError as e:
+            print(f"❌ Split failed: {e}")
+            print("💡 Try adding more samples (at least 2 different materials)")
+            exit(1)
 
-    clf = RandomForestClassifier(n_estimators=10, random_state=42)
-    clf.fit(X_train, y_train)
+        clf = RandomForestClassifier(n_estimators=10, random_state=42)
+        clf.fit(X_train, y_train)
 
-    y_pred = clf.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    print(f"\n✅ Model trained!")
-    print(f"📊 Test Accuracy: {acc * 100:.1f}%")
-    print(f"🎯 Classes: {sorted(set(y))}")
-    
-    # Save the trained model
-    import joblib
-    joblib.dump(clf, 'models/material_model.pkl')
-    print("✅ Model saved to models/material_model.pkl")
+        y_pred = clf.predict(X_test)
+        acc = accuracy_score(y_test, y_pred)
+        print(f"\n✅ Model trained!")
+        print(f"📊 Test Accuracy: {acc * 100:.1f}%")
+        print(f"🎯 Classes: {sorted(set(y))}")
+
+        # Save the trained model
+        joblib.dump(clf, 'models/material_model.pkl')
+        print("✅ Model saved to models/material_model.pkl")
+
+    _train_default()

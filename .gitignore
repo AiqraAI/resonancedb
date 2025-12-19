@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local environment
+.env
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# ==================================
+# SERVER INFRASTRUCTURE (separate repo)
+# ==================================
+# These are deployed separately and should not be in the source code repository
+# Contributors only need the core Python source for data collection
+
+# FastAPI Backend Server
+api/
+
+# Next.js Web Dashboard
+web/
+
+# Local SQLite database (production uses PostgreSQL)
+resonancedb.db
+*.db
+
+# Node modules (if any accidentally created at root)
+node_modules/

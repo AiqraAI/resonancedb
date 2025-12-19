@@ -3,6 +3,7 @@ import joblib
 import json
 import numpy as np
 from pathlib import Path
+from python.features import compute_feature_vector
 
 def predict_material(file_path):
     # Load model
@@ -14,18 +15,10 @@ def predict_material(file_path):
     
     signal = np.array(data['vibration'])
     sample_rate = data['sample_rate_hz']
-    
-    # Extract features (same as training)
-    fft_vals = np.abs(np.fft.fft(signal))
-    freqs = np.fft.fftfreq(len(signal), 1/sample_rate)
-    peak_freq = freqs[np.argmax(fft_vals[:len(fft_vals)//2])]
-    
-    envelope = np.abs(signal)
-    decay_rate = -np.polyfit(np.arange(len(envelope)), np.log(envelope + 1e-8), 1)[0]
-    energy = np.sum(signal**2)
-    
-    # Predict
-    features = np.array([[peak_freq, decay_rate, energy]])
+
+    # Extract features via shared module
+    vec = compute_feature_vector(signal, sample_rate)
+    features = np.array([vec])  # shape (1, 3)
     prediction = model.predict(features)[0]
     
     print(f"🔮 This is {prediction.upper()}!")

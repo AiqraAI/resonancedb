@@ -2,6 +2,7 @@ import joblib
 import json
 import numpy as np
 from pathlib import Path
+from python.features import compute_feature_vector, compute_features
 
 def predict_material(file_path):
     # Load the trained model
@@ -23,20 +24,11 @@ def predict_material(file_path):
     signal = np.array(data['vibration'])
     sample_rate = data['sample_rate_hz']
 
-    # --- 🔧 Feature Extraction (MUST be included!) ---
-    # 1. Dominant frequency
-    fft_vals = np.abs(np.fft.fft(signal))
-    freqs = np.fft.fftfreq(len(signal), 1/sample_rate)
-    half = len(fft_vals) // 2
-    peak_freq = freqs[np.argmax(fft_vals[:half])]
-
-    # 2. Decay rate (damping)
-    envelope = np.abs(signal)
-    log_env = np.log(envelope + 1e-8)  # Avoid log(0)
-    decay_rate = -np.polyfit(np.arange(len(log_env)), log_env, 1)[0]
-
-    # 3. Energy
-    energy = np.sum(signal ** 2)
+    # --- 🔧 Feature Extraction (shared) ---
+    feat_dict = compute_features(signal, sample_rate)
+    peak_freq = feat_dict["peak_freq"]
+    decay_rate = feat_dict["decay_rate"]
+    energy = feat_dict["energy"]
 
     # Print what we extracted
     print(f"📊 Features: {peak_freq:.1f} Hz, decay={decay_rate:.3f}, energy={energy:.5f}")
