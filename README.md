@@ -5,7 +5,7 @@
 
 > 🧠 _"Teaching machines to feel the world, one tap at a time."_
 
-When you tap an object — glass, wood, metal, plastic — it vibrates and rings
+When you tap an object (glass, wood, metal, plastic) it vibrates and rings
 in a way that is unique to its material, geometry, and condition. ResonanceDB
 is an open-source project building a **public dataset of these tap
 signatures**, plus the tools to capture, validate, and learn from them, so
@@ -13,8 +13,8 @@ that AI, robots, and IoT devices can identify materials and detect structural
 flaws without touching them.
 
 **The product is the dataset.** The code in this repo exists to grow that
-dataset and to prove what can be learned from it. The full plan — including
-what is deliberately parked — lives in [ROADMAP.md](ROADMAP.md).
+dataset and to prove what can be learned from it. The full plan, including
+what is deliberately parked, lives in [ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -22,12 +22,12 @@ what is deliberately parked — lives in [ROADMAP.md](ROADMAP.md).
 
 | Path | What it is |
 |------|------------|
-| `resonancedb/` | The Python package: feature extraction, preprocessing, schema validation, simulation, training — and the `resdb` CLI |
-| `data/` | The dataset — grows via pull requests, one folder per material |
+| `resonancedb/` | The Python package: feature extraction, preprocessing, schema validation, simulation, training, and the `resdb` CLI |
+| `data/` | The dataset. Grows via pull requests, one folder per material |
 | `docs/` | Data format spec and guides |
 | `tests/` | Test suite |
 | `scripts/` | Legacy phone-accelerometer (phyphox) converter |
-| `firmware/` | ESP32 prototype — **parked**, see [firmware/README.md](firmware/README.md) |
+| `firmware/` | ESP32 prototype. **Parked**, see [firmware/README.md](firmware/README.md) |
 
 ---
 
@@ -39,7 +39,7 @@ cd resonancedb
 pip install -e ".[dev]"
 ```
 
-Generate synthetic taps, train a model, and classify a sample — end to end in
+Generate synthetic taps, train a model, and classify a sample, end to end in
 under a minute:
 
 ```bash
@@ -51,7 +51,7 @@ resdb predict data/simulated/glass.json
 
 Other commands: `resdb tune` (k-fold hyperparameter search), `resdb evaluate`
 (accuracy report + confusion matrix), `resdb inspect` (show a saved model's
-embedded configuration), `resdb export` (ONNX for browser/edge inference —
+embedded configuration), `resdb export` (ONNX for browser/edge inference;
 needs `pip install "resonancedb[export]"`).
 
 Use it as a library:
@@ -70,7 +70,7 @@ vec = compute_feature_vector(signal, sample_rate_hz=48000, extra=True)
 
 **Microphone-first.** Every phone has a 44.1+ kHz microphone, and a tap's
 acoustic ring is far richer than what low-rate accelerometers can capture
-(glass and metal resonate in the kHz range — beyond what a ~1 kHz
+(glass and metal resonate in the kHz range, beyond what a ~1 kHz
 accelerometer can even see). A **zero-install, browser-based capture page**
 is the next milestone: open a link, allow the mic, tap the object, submit.
 
@@ -108,12 +108,12 @@ accelerometer app like phyphox, and format samples per
 
 ## 🗺️ Where this is going
 
-1. **Phase 1** — pilot dataset + an honest **cross-device** benchmark (the
+1. **Phase 1**: pilot dataset + an honest **cross-device** benchmark (the
    go/no-go question: do tap signatures generalize between recording devices?)
-2. **Phase 2** — zero-install browser capture page
-3. **Phase 3** — PR-based community pipeline; dataset published to Hugging
+2. **Phase 2**: zero-install browser capture page
+3. **Phase 3**: PR-based community pipeline; dataset published to Hugging
    Face (`load_dataset("aiqra/resonancedb")`)
-4. **Phase 4** — model zoo + in-browser demo: tap your table, get a
+4. **Phase 4**: model zoo + in-browser demo: tap your table, get a
    prediction, no server involved
 
 Details and acceptance criteria: [ROADMAP.md](ROADMAP.md).
@@ -122,26 +122,26 @@ Details and acceptance criteria: [ROADMAP.md](ROADMAP.md).
 
 ## 🤝 Contributing
 
-- **Data** — new materials, varied conditions (temperature, load, humidity),
+- **Data**: new materials, varied conditions (temperature, load, humidity),
   multiple recording devices. See [CONTRIBUTING.md](CONTRIBUTING.md).
-- **Code** — signal processing, the capture page, evaluation tooling.
-- **Science** — help design the Phase 1 cross-device benchmark protocol:
-  open an issue.
-- **Spread the word** — star this repo 🌟, teach it in your lab or classroom.
+- **Code**: signal processing, the capture page, evaluation tooling.
+- **Science**: help design the Phase 1 cross-device benchmark protocol by
+  opening an issue.
+- **Spread the word**: star this repo 🌟, teach it in your lab or classroom.
 
 ---
 
 ## 📄 License
 
-Code is MIT — use freely, even commercially. We only ask: **contribute back
+Code is MIT: use freely, even commercially. We only ask: **contribute back
 what you learn.** The dataset carries its own license, finalized before
-Phase 3 (leaning CC-BY — see the roadmap).
+Phase 3 (leaning CC-BY, see the roadmap).
 
 ---
 
 ## 🚀 Powered by AIQRA AI
 
-This project is led by **[AIQRA AI](https://aiqra.ai)** — advancing open
+This project is led by **[AIQRA AI](https://aiqra.ai)**, advancing open
 physical intelligence. Want to collaborate? Contact: info@aiqra.ai
 
 _The first tap is free. The knowledge is forever._
