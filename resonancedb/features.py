@@ -3,15 +3,18 @@ from .preprocess import PreprocessConfig, run_pipeline
 
 
 def preprocess(signal: np.ndarray, sample_rate_hz: float, *, detrend: bool = True, window: str | None = "hann",
-               target_length: int | None = None, resample_rate_hz: float | None = None) -> np.ndarray:
-    """Preprocess with optional mean removal, windowing, length normalization, and resampling."""
+               target_length: int | None = None, resample_rate_hz: float | None = None,
+               highpass_hz: float | None = None) -> np.ndarray:
+    """Preprocess with optional mean removal, high-pass filtering, windowing, length normalization, and resampling."""
     cfg = PreprocessConfig(detrend=detrend, window=window,
-                           target_length=target_length, resample_rate_hz=resample_rate_hz)
+                           target_length=target_length, resample_rate_hz=resample_rate_hz,
+                           highpass_hz=highpass_hz)
     return run_pipeline(signal, sample_rate_hz, cfg)
 
 
 def compute_feature_vector(signal: np.ndarray, sample_rate_hz: float, *, detrend: bool = True, window: str | None = "hann",
                            target_length: int | None = None, resample_rate_hz: float | None = None,
+                           highpass_hz: float | None = None,
                            config: PreprocessConfig | None = None,
                            extra: bool | list[str] = False,
                            top_k_peaks: int = 3) -> np.ndarray:
@@ -22,7 +25,8 @@ def compute_feature_vector(signal: np.ndarray, sample_rate_hz: float, *, detrend
     """
     if config is None:
         config = PreprocessConfig(detrend=detrend, window=window,
-                                  target_length=target_length, resample_rate_hz=resample_rate_hz)
+                                  target_length=target_length, resample_rate_hz=resample_rate_hz,
+                                  highpass_hz=highpass_hz)
     x = run_pipeline(signal, sample_rate_hz, config)
 
     # If the pipeline resampled the signal, every rate-dependent feature

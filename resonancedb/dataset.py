@@ -18,6 +18,7 @@ def load_data(
     window: str | None = "hann",
     target_length: int | None = None,
     resample_rate_hz: float | None = None,
+    highpass_hz: float | None = None,
     verbose: bool = True,
     return_meta: bool = False,
 ):
@@ -83,6 +84,7 @@ def load_data(
                 window=window,
                 target_length=target_length,
                 resample_rate_hz=resample_rate_hz,
+                highpass_hz=highpass_hz,
                 extra=extra,
                 top_k_peaks=top_k_peaks,
             )

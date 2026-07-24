@@ -79,11 +79,13 @@ def _effective_predict_config(args, saved_cfg: dict):
     window_flag = args.window if args.window is not None else bool(saved_pre.get("window", True))
     target_length = args.target_length if args.target_length is not None else saved_pre.get("target_length")
     resample = args.resample_rate_hz if args.resample_rate_hz is not None else saved_pre.get("resample_rate_hz")
+    highpass = args.highpass_hz if args.highpass_hz is not None else saved_pre.get("highpass_hz")
     return {
         "detrend": detrend,
         "window": "hann" if window_flag else None,
         "target_length": target_length,
         "resample_rate_hz": resample,
+        "highpass_hz": highpass,
         "extra": extra,
         "top_k_peaks": top_k,
     }
@@ -146,6 +148,22 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     session = samples[0]["session"]
+
+    # Guard against silently overwriting a different recording. Sample
+    # filenames are built from material/device/session, so re-using those
+    # labels for a second recording would replace the first one's taps and
+    # leave a mix of two objects under one label.
+    prefix = f"{args.material.lower()}_{args.device}_{session}_tap"
+    existing = sorted(out_dir.glob(f"{prefix}*.json"))
+    if existing and not args.force:
+        print(f"[FAIL] {len(existing)} sample(s) already exist for "
+              f"material={args.material.lower()} device={args.device} "
+              f"session={session} in {out_dir}.")
+        print("       Ingesting here would overwrite another recording's taps.")
+        print("       Use a different --session for this recording, or pass "
+              "--force to replace the existing ones.")
+        return 1
+
     written = 0
     for i, sample in enumerate(samples, start=1):
         errors = validate_sample_dict(sample)
@@ -179,6 +197,7 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
         window=_window_name(args.window),
         target_length=args.target_length,
         resample_rate_hz=args.resample_rate_hz,
+        highpass_hz=args.highpass_hz,
         return_meta=True,
     )
     if len(X) == 0:
@@ -263,6 +282,7 @@ def train_model(
     window: bool | None = None,
     target_length: int | None = None,
     resample_rate_hz: float | None = None,
+    highpass_hz: float | None = None,
 ) -> bool:
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.metrics import accuracy_score
@@ -282,6 +302,7 @@ def train_model(
         window=window_name,
         target_length=target_length,
         resample_rate_hz=resample_rate_hz,
+        highpass_hz=highpass_hz,
     )
     if len(X) == 0:
         print("[FAIL] Training aborted: no data to learn from.")
@@ -318,6 +339,7 @@ def train_model(
                 "window": window_name is not None,
                 "target_length": target_length,
                 "resample_rate_hz": resample_rate_hz,
+                "highpass_hz": highpass_hz,
             },
             "extra": extra,
             "top_k_peaks": top_k_peaks,
@@ -342,6 +364,7 @@ def cmd_train(args: argparse.Namespace) -> int:
         window=args.window,
         target_length=args.target_length,
         resample_rate_hz=args.resample_rate_hz,
+        highpass_hz=args.highpass_hz,
     )
     return 0 if ok else 1
 
@@ -364,6 +387,7 @@ def cmd_tune(args: argparse.Namespace) -> int:
         window=window_name,
         target_length=args.target_length,
         resample_rate_hz=args.resample_rate_hz,
+        highpass_hz=args.highpass_hz,
     )
     if len(X) == 0:
         print("[FAIL] Tuning aborted: no data to learn from.")
@@ -407,6 +431,7 @@ def cmd_tune(args: argparse.Namespace) -> int:
                 "window": window_name is not None,
                 "target_length": args.target_length,
                 "resample_rate_hz": args.resample_rate_hz,
+                "highpass_hz": args.highpass_hz,
             },
             "extra": extra,
             "top_k_peaks": top_k_peaks,
@@ -456,6 +481,7 @@ def cmd_predict(args: argparse.Namespace) -> int:
             window="hann" if pre.get("window", True) else None,
             target_length=pre.get("target_length"),
             resample_rate_hz=pre.get("resample_rate_hz"),
+            highpass_hz=pre.get("highpass_hz"),
             extra=saved_cfg.get("extra", False),
             top_k_peaks=int(saved_cfg.get("top_k_peaks", 3)),
         )
@@ -489,6 +515,7 @@ def cmd_inspect(args: argparse.Namespace) -> int:
         print(f"  window: {pre.get('window', True)}")
         print(f"  target_length: {pre.get('target_length')}")
         print(f"  resample_rate_hz: {pre.get('resample_rate_hz')}")
+        print(f"  highpass_hz: {pre.get('highpass_hz')}")
         if "best_params" in cfg:
             print(f"Best params: {cfg['best_params']}")
         if "best_cv_accuracy" in cfg:
@@ -519,6 +546,7 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
         window=cfg["window"],
         target_length=cfg["target_length"],
         resample_rate_hz=cfg["resample_rate_hz"],
+        highpass_hz=cfg["highpass_hz"],
     )
     if len(X) == 0:
         print("[FAIL] Evaluation aborted: no data to evaluate.")
@@ -657,6 +685,10 @@ def _add_preprocess_flags(parser: argparse.ArgumentParser) -> None:
                    help="Normalize signal length to this value")
     g.add_argument("--resample-rate-hz", type=float, default=None,
                    help="Resample signal to this rate (Hz)")
+    g.add_argument("--highpass-hz", type=float, default=None,
+                   help="Remove content below this frequency (Hz). Recommended "
+                        "for microphone recordings, where sub-100 Hz rumble "
+                        "otherwise dominates every feature. Try 150.")
     g.add_argument("--detrend", dest="detrend", action="store_true", default=None,
                    help="Enable mean detrending")
     g.add_argument("--no-detrend", dest="detrend", action="store_false",
@@ -709,6 +741,9 @@ def build_parser() -> argparse.ArgumentParser:
                       help="Minimum seconds between distinct taps")
     ping.add_argument("--duration", type=float, default=0.5,
                       help="Seconds to keep per tap")
+    ping.add_argument("--force", action="store_true", default=False,
+                      help="Overwrite existing samples with the same "
+                           "material/device/session labels")
     ping.set_defaults(func=cmd_ingest)
 
     pb = sub.add_parser(
