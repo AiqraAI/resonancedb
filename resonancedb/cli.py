@@ -185,6 +185,27 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
         print("[FAIL] Benchmark aborted: no data.")
         return 1
 
+    # Simulated samples are for pipeline testing; mixing them into a real
+    # benchmark corrupts the number the benchmark exists to produce.
+    if not args.include_simulated:
+        keep = [i for i, m in enumerate(meta) if m.get("source") != "simulation"]
+        dropped = len(meta) - len(keep)
+        if dropped:
+            print(f"[INFO] Excluding {dropped} simulated sample(s) "
+                  "(use --include-simulated to keep them)")
+        X = X[keep]
+        y = y[keep]
+        meta = [meta[i] for i in keep]
+    if len(X) == 0:
+        print("[FAIL] Benchmark aborted: only simulated data found.")
+        return 1
+
+    if len(set(y.tolist())) < 2:
+        print(f"[FAIL] Benchmark needs at least 2 materials; found only "
+              f"{sorted(set(y.tolist()))}. A single-class benchmark would "
+              "score 100% while proving nothing. Record more materials first.")
+        return 1
+
     groups = [m.get(args.group_by) or "unknown" for m in meta]
     try:
         report = leave_one_group_out(X, y, groups, random_state=args.random_state)
@@ -701,6 +722,8 @@ def build_parser() -> argparse.ArgumentParser:
     pb.add_argument("--random-state", type=int, default=42)
     pb.add_argument("--save-dir", default=None,
                     help="Directory to write benchmark_report.json")
+    pb.add_argument("--include-simulated", action="store_true", default=False,
+                    help="Also benchmark samples with source=simulation (off by default)")
     _add_feature_flags(pb)
     _add_preprocess_flags(pb)
     pb.set_defaults(func=cmd_benchmark)
