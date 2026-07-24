@@ -62,3 +62,8 @@ resonancedb.db
 
 # Node modules (if any accidentally created at root)
 node_modules/
+# Local artifacts
+models/
+*.pkl
+*.onnx
+data/simulated/

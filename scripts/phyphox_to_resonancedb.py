@@ -1,4 +1,13 @@
 # scripts/phyphox_to_resonancedb.py
+#
+# LEGACY: phone accelerometer capture via phyphox is superseded by the
+# microphone-based capture path (see ROADMAP.md Phase 2) — phone browsers
+# cap motion sensors at ~60 Hz while the mic records at 44.1+ kHz.
+# Kept for contributors who specifically want contact-vibration data.
+#
+# KNOWN ISSUE: phyphox "Linear Acceleration" already has gravity removed;
+# the `- 1.0` subtraction below is wrong and will be fixed or removed when
+# this path is revisited. Do not rely on this converter for real datasets.
 import pandas as pd
 import json
 import numpy as np
