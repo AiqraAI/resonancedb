@@ -7,10 +7,10 @@ All contributions must follow this JSON schema.
 | Field | Type | Description |
 |------|------|-------------|
 | `material` | string | e.g., `glass`, `oak_wood`, `aluminum` |
-| `vibration` | number[] | Acceleration values (g) over time |
-| `sample_rate_hz` | number | Samples per second (e.g., 1000) |
-| `excitation` | string | How vibration was created: `manual_tap`, `solenoid`, `ambient` |
-| `source` | string | `real`, `simulation`, `phone_sensor` |
+| `vibration` | number[] | The signal over time: accelerometer values (g) or normalized audio amplitude in [-1, 1] |
+| `sample_rate_hz` | number | Samples per second (e.g., 48000 for audio, 1000 for accelerometers) |
+| `excitation` | string | How vibration was created: `manual_tap`, `solenoid`, `ambient`, `simulated` |
+| `source` | string | `microphone`, `phone_sensor`, `simulation`, `real` |
 
 ## 🌡️ Optional Fields
 
@@ -20,7 +20,8 @@ All contributions must follow this JSON schema.
 | `thickness_mm` | number | Thickness of material |
 | `load_g` | number | Weight on surface (grams) |
 | `mounting` | string | e.g., `clamped`, `free_edge`, `on_table` |
-| `device` | string | Sensor used: `ESP32+MPU6050`, `iPhone14`, etc. |
+| `device` | string | Recording device: `pixel7`, `iphone14`, `usb_mic`, `ESP32+MPU6050`, etc. Used by `resdb benchmark --group-by device` |
+| `session` | string | Recording session id (one session = one material on one device in one sitting). Used by `resdb benchmark --group-by session` |
 
 ## 📂 Example
 

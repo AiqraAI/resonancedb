@@ -18,8 +18,20 @@ This installs the `resonancedb` package and the `resdb` command.
 - Read the schema in [DATA_FORMAT.md](DATA_FORMAT.md).
 - Required: `material`, `vibration[]`, `sample_rate_hz`, `excitation`, `source`.
 - Optional: `temperature_c`, `thickness_mm`, `load_g`, `mounting`, `device`, `notes`.
-- Validation rules live in `resonancedb.schema` — the single source of truth
+- Validation rules live in `resonancedb.schema`, the single source of truth
   for what a valid sample is.
+
+## Ingest audio (the primary capture path)
+
+```bash
+resdb ingest kitchen_glass.wav --material glass --device pixel7 --session kitchen01
+```
+
+Loads a WAV recording, detects every tap, trims each one, and writes one
+schema-valid JSON sample per tap into `data/<material>/`. Detection knobs:
+`--threshold-ratio` (lower detects quieter taps) and `--min-separation`
+(raise it if ring-downs split into two taps). Full recording guidance:
+[CAPTURE_PROTOCOL.md](CAPTURE_PROTOCOL.md).
 
 ## Validate
 
@@ -29,6 +41,18 @@ resdb validate --data data
 
 Exits non-zero if any file fails, so it can gate CI on data pull requests.
 
+## Benchmark (the honest number)
+
+```bash
+resdb benchmark --data data --group-by device --save-dir models
+```
+
+Leave-one-group-out evaluation: each device (or `session`, or `file`) is
+held out in turn, the model trains on the rest, and accuracy is reported
+per group plus pooled. Random splits leak session identity and flatter the
+model; this number is the one that answers whether tap signatures
+generalize across devices.
+
 ## Simulate
 
 ```bash
@@ -37,7 +61,7 @@ resdb simulate --out-dir data/simulated
 
 Writes one JSON sample per material (glass, wood, metal, plastic) in the
 standard format. The default 4 kHz simulation rate keeps every simulated
-resonance below Nyquist. Simulated data is for pipeline testing — don't
+resonance below Nyquist. Simulated data is for pipeline testing, don't
 submit it to the dataset.
 
 ## Train
@@ -49,7 +73,7 @@ resdb train --data data --extra all --target-length 1024
 - Preprocess flags: `--target-length`, `--resample-rate-hz`,
   `--detrend/--no-detrend`, `--window/--no-window`
 - Extra features: `--extra all` (or a comma-separated subset), `--top-k-peaks 3`
-- Output: `models/material_model.pkl` — a package containing the model AND
+- Output: `models/material_model.pkl`, a package containing the model AND
   the feature configuration it was trained with, so prediction always
   reproduces the same pipeline.
 
@@ -74,7 +98,7 @@ resdb export --model models/material_model.pkl --verify
 - `evaluate` writes `eval_report.json` (and `confusion_matrix.png` when
   matplotlib is installed: `pip install "resonancedb[plots]"`).
 - `export` produces ONNX and requires `pip install "resonancedb[export]"`.
-  TFLite is not supported for scikit-learn models — use ONNX.
+  TFLite is not supported for scikit-learn models, use ONNX.
 
 ## Feature Vector
 
@@ -106,10 +130,10 @@ training, evaluation, and prediction.
 The phyphox CSV converter (`scripts/phyphox_to_resonancedb.py`, requires
 `pip install "resonancedb[phone]"`) is kept as a legacy path for
 contact-vibration data. The primary capture path going forward is
-microphone-based — see [../ROADMAP.md](../ROADMAP.md) Phase 2.
+microphone-based, see [../ROADMAP.md](../ROADMAP.md) Phase 2.
 
 ## Tips
 
 - The signal should contain the tap event; trimming around the largest spike
   improves consistency.
-- Record several taps per object/session — variation is data.
+- Record several taps per object/session, variation is data.

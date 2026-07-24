@@ -49,10 +49,19 @@ resdb train --data data --extra all --target-length 1024
 resdb predict data/simulated/glass.json
 ```
 
+Got a real recording? Turn it into dataset samples and get the honest
+cross-device number:
+
+```bash
+resdb ingest kitchen_glass.wav --material glass --device pixel7
+resdb benchmark --data data --group-by device
+```
+
 Other commands: `resdb tune` (k-fold hyperparameter search), `resdb evaluate`
 (accuracy report + confusion matrix), `resdb inspect` (show a saved model's
 embedded configuration), `resdb export` (ONNX for browser/edge inference;
-needs `pip install "resonancedb[export]"`).
+needs `pip install "resonancedb[export]"`). Recording guidance lives in
+[docs/CAPTURE_PROTOCOL.md](docs/CAPTURE_PROTOCOL.md).
 
 Use it as a library:
 
