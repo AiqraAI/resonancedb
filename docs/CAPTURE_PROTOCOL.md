@@ -62,7 +62,9 @@ it isolates the device as the only variable.
 
 ## From recording to dataset
 
-One command per WAV file:
+One command per recording. The three labels must describe what you actually
+tapped, and `--session` must differ for every recording, otherwise the tool
+refuses rather than overwriting the earlier taps:
 
 ```bash
 resdb ingest glass_pixel7_kitchen01.wav --material glass --device pixel7 --session kitchen01
@@ -73,8 +75,16 @@ This detects each tap, trims it, and writes one JSON sample per tap into
 
 ```bash
 resdb validate --data data
-resdb benchmark --data data --group-by device --save-dir models
+resdb benchmark --data data --group-by device --highpass-hz 150 --save-dir models
 ```
+
+**Always pass `--highpass-hz 150` for microphone data.** Measured on the
+first real pilot recordings, 60 to 85 percent of the energy in a phone
+recording sits below 100 Hz: handling noise, traffic, and mains hum. Without
+the filter, the dominant-frequency feature reports that rumble (48 to 50 Hz)
+for every material. With it, the same recordings report the actual
+resonances, for example 272 Hz for a wooden table and 192 Hz for a concrete
+wall.
 
 `resdb benchmark` holds out each device in turn: it trains on every other
 device and tests on the held-out one. That number, not a random-split
