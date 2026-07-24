@@ -35,8 +35,14 @@ A pilot dataset of at least:
   suppression, and echo cancellation all mangle the tap transient. Most
   "voice memo" apps apply them; a field-recorder app with a "raw" or
   "uncompressed" mode is better.
-- Keep the microphone 10 to 30 cm from the tap point, and keep that distance
-  roughly constant within a session.
+- **Hold the phone in the air**, in your free hand, microphone end (the
+  bottom edge) pointed at the tap point, 10 to 30 cm away. Keep that
+  distance roughly constant within a session.
+- **Never rest the phone on the object you are tapping.** Vibration then
+  travels through the phone's body into the microphone and you measure the
+  contact rumble instead of the object's sound. Recordings made that way
+  are a different measurement condition and don't belong in the same
+  dataset as air-recorded ones.
 - Pick a quiet room. Fridges, fans, and traffic all raise the noise floor.
 
 ## Procedure (one session = one material on one device)
