@@ -27,6 +27,10 @@ A pilot dataset of at least:
 ## Recording settings
 
 - Record WAV (uncompressed) if your recorder allows it. 44.1 kHz or 48 kHz.
+  Phone formats (`.m4a`, `.mp4`, `.mp3`) are also accepted: `resdb ingest`
+  decodes them automatically (needs `pip install "resonancedb[media]"`,
+  included in the dev install). WAV is still preferred because lossy codecs
+  smear the tap transient slightly.
 - **Disable voice processing if you can**: automatic gain control, noise
   suppression, and echo cancellation all mangle the tap transient. Most
   "voice memo" apps apply them; a field-recorder app with a "raw" or

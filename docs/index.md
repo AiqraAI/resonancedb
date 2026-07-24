@@ -27,7 +27,8 @@ This installs the `resonancedb` package and the `resdb` command.
 resdb ingest kitchen_glass.wav --material glass --device pixel7 --session kitchen01
 ```
 
-Loads a WAV recording, detects every tap, trims each one, and writes one
+Loads a recording (WAV directly; m4a/mp4/mp3 via the bundled ffmpeg in the
+`[media]` extra), detects every tap, trims each one, and writes one
 schema-valid JSON sample per tap into `data/<material>/`. Detection knobs:
 `--threshold-ratio` (lower detects quieter taps) and `--min-separation`
 (raise it if ring-downs split into two taps). Full recording guidance:

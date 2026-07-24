@@ -81,3 +81,26 @@ def test_wav_to_samples_default_session_is_filename(tmp_path):
     write_wav(path, synth_recording())
     samples = wav_to_samples(path, "glass", device="iphone")
     assert samples[0]["session"] == "kitchen_glass_take2"
+
+
+def test_load_audio_decodes_m4a(tmp_path):
+    """Non-WAV recordings (phone mp4/m4a) decode through bundled ffmpeg."""
+    imageio_ffmpeg = pytest.importorskip("imageio_ffmpeg")
+    import subprocess
+
+    from resonancedb.audio import load_audio
+
+    wav_path = tmp_path / "rec.wav"
+    write_wav(wav_path, synth_recording())
+    m4a_path = tmp_path / "rec.m4a"
+    subprocess.run(
+        [imageio_ffmpeg.get_ffmpeg_exe(), "-y", "-i", str(wav_path),
+         "-c:a", "aac", str(m4a_path)],
+        capture_output=True, check=True,
+    )
+
+    signal, sr = load_audio(m4a_path)
+    assert sr == SR
+    assert signal.ndim == 1
+    # Lossy codec, but the taps must still be clearly detectable
+    assert len(detect_taps(signal, sr)) == 3

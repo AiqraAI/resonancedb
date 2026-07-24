@@ -32,7 +32,9 @@ export = ["skl2onnx", "onnx", "onnxruntime"]
 plots = ["matplotlib"]
 # Legacy phone CSV converter (scripts/phyphox_to_resonancedb.py)
 phone = ["pandas"]
-dev = ["pytest", "pandas", "matplotlib"]
+# Decode non-WAV recordings (mp4, m4a, mp3, ...) in `resdb ingest`
+media = ["imageio-ffmpeg"]
+dev = ["pytest", "pandas", "matplotlib", "imageio-ffmpeg"]
 
 [project.scripts]
 resdb = "resonancedb.cli:main"

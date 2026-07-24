@@ -67,3 +67,4 @@ models/
 *.pkl
 *.onnx
 data/simulated/
+recordings/

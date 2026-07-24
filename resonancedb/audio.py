@@ -16,6 +16,51 @@ from pathlib import Path
 import numpy as np
 
 
+def load_audio(path) -> tuple[np.ndarray, int]:
+    """Load any common audio/video file as a mono float signal in [-1, 1].
+
+    WAV files are read directly. Other formats (mp4, m4a, mp3, ogg, phone
+    video recordings, ...) are decoded through a bundled ffmpeg, which
+    requires the optional dependency: pip install "resonancedb[media]".
+    """
+    p = Path(path)
+    if p.suffix.lower() == ".wav":
+        return load_wav(p)
+    return _load_via_ffmpeg(p)
+
+
+def _load_via_ffmpeg(path: Path) -> tuple[np.ndarray, int]:
+    """Decode a non-WAV file to a temporary WAV using bundled ffmpeg."""
+    import subprocess
+    import tempfile
+
+    try:
+        import imageio_ffmpeg
+    except ImportError:
+        raise RuntimeError(
+            f"{path.name} is not a WAV file. Decoding other formats needs "
+            "the media extra: pip install \"resonancedb[media]\""
+        )
+
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+    tmp.close()
+    try:
+        result = subprocess.run(
+            [ffmpeg, "-y", "-i", str(path), "-vn",
+             "-acodec", "pcm_s16le", tmp.name],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            tail = result.stderr.decode(errors="replace").strip().splitlines()[-1:]
+            raise RuntimeError(
+                f"ffmpeg could not decode {path.name}: {' '.join(tail)}"
+            )
+        return load_wav(tmp.name)
+    finally:
+        Path(tmp.name).unlink(missing_ok=True)
+
+
 def load_wav(path) -> tuple[np.ndarray, int]:
     """Load a WAV file as a mono float signal in [-1, 1].
 
@@ -138,10 +183,10 @@ def wav_to_samples(
     min_separation_s: float = 0.25,
     duration_s: float = 0.5,
 ) -> list[dict]:
-    """Convert one WAV recording into a list of schema-valid sample dicts,
-    one per detected tap.
+    """Convert one recording (WAV, or any ffmpeg-decodable format) into a
+    list of schema-valid sample dicts, one per detected tap.
     """
-    signal, sample_rate = load_wav(wav_path)
+    signal, sample_rate = load_audio(wav_path)
     segments = extract_taps(
         signal, sample_rate,
         threshold_ratio=threshold_ratio,
@@ -154,7 +199,9 @@ def wav_to_samples(
     for i, seg in enumerate(segments, start=1):
         sample = {
             "material": material,
-            "vibration": seg.tolist(),
+            # 6 decimals is well below the noise floor of any microphone
+            # (16-bit PCM resolves ~3e-5) and roughly halves the JSON size.
+            "vibration": np.round(seg, 6).tolist(),
             "sample_rate_hz": sample_rate,
             "excitation": excitation,
             "source": source,
