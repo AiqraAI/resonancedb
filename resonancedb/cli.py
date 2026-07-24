@@ -182,6 +182,32 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     return 0 if written else 1
 
 
+def cmd_summary(args: argparse.Namespace) -> int:
+    """Per-session overview: tap counts, frequencies, and recording quality."""
+    from .summary import format_summary, summarize_dataset
+
+    data_dir = Path(args.data)
+    if not data_dir.exists():
+        print(f"[FAIL] '{data_dir}' does not exist")
+        return 1
+
+    report = summarize_dataset(
+        data_dir,
+        # 0 means "no filtering" rather than an invalid cutoff
+        highpass_hz=args.highpass_hz or None,
+        include_simulated=args.include_simulated,
+    )
+    print(format_summary(report))
+
+    if args.json:
+        out = Path(args.json)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with out.open("w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2)
+        print(f"\n[OK] Saved summary: {out}")
+    return 0 if report["sessions"] else 1
+
+
 def cmd_benchmark(args: argparse.Namespace) -> int:
     """Leave-one-group-out evaluation: the honest cross-device number."""
     from .benchmark import leave_one_group_out
@@ -773,6 +799,20 @@ def build_parser() -> argparse.ArgumentParser:
                       help="Overwrite existing samples with the same "
                            "material/device/session labels")
     ping.set_defaults(func=cmd_ingest)
+
+    psum = sub.add_parser(
+        "summary",
+        help="Per-session overview: tap counts, frequencies, recording quality",
+    )
+    psum.add_argument("--data", default="data")
+    psum.add_argument("--highpass-hz", type=float, default=150.0,
+                      help="High-pass cutoff used for the reported frequencies "
+                           "(default 150; pass 0 to disable)")
+    psum.add_argument("--include-simulated", action="store_true", default=False,
+                      help="Also list samples with source=simulation")
+    psum.add_argument("--json", default=None,
+                      help="Also write the summary to this JSON path")
+    psum.set_defaults(func=cmd_summary)
 
     pb = sub.add_parser(
         "benchmark",

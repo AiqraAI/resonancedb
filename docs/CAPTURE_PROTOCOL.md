@@ -80,6 +80,7 @@ This detects each tap, trims it, and writes one JSON sample per tap into
 `data/glass/`. Then check and evaluate:
 
 ```bash
+resdb summary --data data
 resdb validate --data data
 resdb benchmark --data data --group-by device --highpass-hz 150 --save-dir models
 ```

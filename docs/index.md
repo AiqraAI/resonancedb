@@ -34,6 +34,19 @@ schema-valid JSON sample per tap into `data/<material>/`. Detection knobs:
 (raise it if ring-downs split into two taps). Full recording guidance:
 [CAPTURE_PROTOCOL.md](CAPTURE_PROTOCOL.md).
 
+## Summary
+
+```bash
+resdb summary --data data
+```
+
+A per-session table: tap counts, the frequency each object rings at, the
+recording level, and quality flags (clipped, very quiet, too few taps,
+striker unrecorded). It also warns when a material has only one session,
+which makes it impossible to benchmark, and when everything comes from a
+single device. Run it after a recording trip to see whether the sessions
+came out well.
+
 ## Validate
 
 ```bash
