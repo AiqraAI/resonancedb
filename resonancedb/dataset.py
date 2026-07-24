@@ -19,6 +19,7 @@ def load_data(
     target_length: int | None = None,
     resample_rate_hz: float | None = None,
     verbose: bool = True,
+    return_meta: bool = False,
 ):
     """Load every valid .json sample under `data_dir` and extract features.
 
@@ -26,20 +27,28 @@ def load_data(
     the standard Hann window.
 
     Returns (X, y) as numpy arrays; both empty if nothing valid was found.
+    With `return_meta=True`, returns (X, y, meta) where meta is a list of
+    dicts per sample: {"file", "device", "session", "source"} for use in
+    group-aware evaluation (see `resdb benchmark`).
     """
     features = []
     labels = []
+    meta: list[dict] = []
     data_path = Path(data_dir)
 
     def log(msg):
         if verbose:
             print(msg)
 
+    def result():
+        X, y = np.array(features), np.array(labels)
+        return (X, y, meta) if return_meta else (X, y)
+
     log(f"Looking for data in: {data_path.absolute()}")
 
     if not data_path.exists():
         log(f"[FAIL] Folder does not exist: {data_path}")
-        return np.array([]), np.array([])
+        return result()
 
     json_files = sorted(data_path.rglob("*.json"))
     log(f"Found {len(json_files)} JSON file(s)")
@@ -83,12 +92,17 @@ def load_data(
 
         features.append(vec.tolist())
         labels.append(data["material"])
+        meta.append({
+            "file": file_path.name,
+            "device": data.get("device") or "unknown",
+            "session": data.get("session") or file_path.stem,
+            "source": data.get("source") or "unknown",
+        })
         log(f"[OK] {file_path.name}: {data['material']} | "
             f"{vec[0]:.1f} Hz | decay={vec[1]:.3f} | energy={vec[2]:.3f}")
 
     if not features:
         log("[FAIL] No valid data loaded.")
-        return np.array([]), np.array([])
-
-    log(f"Loaded {len(features)} sample(s): {sorted(set(labels))}")
-    return np.array(features), np.array(labels)
+    else:
+        log(f"Loaded {len(features)} sample(s): {sorted(set(labels))}")
+    return result()

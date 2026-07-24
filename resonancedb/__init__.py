@@ -1,4 +1,4 @@
-"""ResonanceDB — open tools for vibration fingerprints of materials."""
+"""ResonanceDB, open tools for vibration fingerprints of materials."""
 
 __version__ = "0.1.0"
 

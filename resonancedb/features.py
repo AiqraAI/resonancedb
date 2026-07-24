@@ -27,7 +27,7 @@ def compute_feature_vector(signal: np.ndarray, sample_rate_hz: float, *, detrend
 
     # If the pipeline resampled the signal, every rate-dependent feature
     # (FFT frequency bins, ZCR, autocorrelation lag) must use the effective
-    # post-resample rate, not the original one — otherwise frequencies are
+    # post-resample rate, not the original one, otherwise frequencies are
     # scaled by original/resampled and differ per source device.
     if config.resample_rate_hz is not None and config.resample_rate_hz > 0:
         sample_rate_hz = config.resample_rate_hz

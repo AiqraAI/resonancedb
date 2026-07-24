@@ -1,7 +1,7 @@
 """Validation of ResonanceDB sample files against the data format.
 
 The rules here ARE the open data standard (docs/DATA_FORMAT.md); every
-consumer — the CLI, CI checks on data PRs, and any hosted service — should
+consumer, the CLI, CI checks on data PRs, and any hosted service, should
 validate through this module rather than re-implementing the rules.
 """
 

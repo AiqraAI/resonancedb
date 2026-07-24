@@ -1,7 +1,7 @@
 """Synthetic tap generation for testing and demos.
 
 Simulated samples are written in the same JSON format as real submissions
-(see docs/DATA_FORMAT.md) so the whole pipeline — validate, train, predict —
+(see docs/DATA_FORMAT.md) so the whole pipeline (validate, train, predict)
 works on them unchanged.
 """
 

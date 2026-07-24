@@ -1,4 +1,4 @@
-"""resdb — the ResonanceDB command line.
+"""resdb, the ResonanceDB command line.
 
 Subcommands: simulate, validate, train, tune, evaluate, predict, inspect, export.
 
@@ -108,6 +108,111 @@ def cmd_simulate(args: argparse.Namespace) -> int:
         return 1
     for path in written:
         print(f"[OK] Generated {path}")
+    return 0
+
+
+def cmd_ingest(args: argparse.Namespace) -> int:
+    """Convert a WAV recording into one schema-valid JSON sample per tap."""
+    from .audio import wav_to_samples
+    from .schema import validate_sample_dict
+
+    wav_path = Path(args.wav)
+    if not wav_path.exists():
+        print(f"[FAIL] WAV file not found: {wav_path}")
+        return 1
+
+    try:
+        samples = wav_to_samples(
+            wav_path,
+            args.material.lower(),
+            device=args.device,
+            session=args.session,
+            excitation=args.excitation,
+            source=args.source,
+            threshold_ratio=args.threshold_ratio,
+            min_separation_s=args.min_separation,
+            duration_s=args.duration,
+        )
+    except Exception as e:
+        print(f"[FAIL] Could not read {wav_path}: {e}")
+        return 1
+
+    if not samples:
+        print(f"[FAIL] No taps detected in {wav_path.name}. "
+              "Try lowering --threshold-ratio, or check the recording.")
+        return 1
+
+    out_dir = Path(args.out_dir) if args.out_dir else Path("data") / args.material.lower()
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    session = samples[0]["session"]
+    written = 0
+    for i, sample in enumerate(samples, start=1):
+        errors = validate_sample_dict(sample)
+        if errors:
+            print(f"[SKIP] tap {i}: {'; '.join(errors)}")
+            continue
+        out_path = out_dir / f"{args.material.lower()}_{args.device}_{session}_tap{i:02d}.json"
+        with out_path.open("w", encoding="utf-8") as f:
+            json.dump(sample, f)
+        print(f"[OK] {out_path} ({len(sample['vibration'])} samples "
+              f"@ {sample['sample_rate_hz']} Hz)")
+        written += 1
+
+    print(f"\n{written} tap(s) written from {wav_path.name}")
+    return 0 if written else 1
+
+
+def cmd_benchmark(args: argparse.Namespace) -> int:
+    """Leave-one-group-out evaluation: the honest cross-device number."""
+    from .benchmark import leave_one_group_out
+
+    extra = _parse_extra_flag(args.extra) if args.extra is not None else True
+    top_k = 3 if args.top_k_peaks is None else int(args.top_k_peaks)
+    detrend = True if args.detrend is None else bool(args.detrend)
+
+    X, y, meta = load_data(
+        str(Path(args.data)),
+        extra=extra,
+        top_k_peaks=top_k,
+        detrend=detrend,
+        window=_window_name(args.window),
+        target_length=args.target_length,
+        resample_rate_hz=args.resample_rate_hz,
+        return_meta=True,
+    )
+    if len(X) == 0:
+        print("[FAIL] Benchmark aborted: no data.")
+        return 1
+
+    groups = [m.get(args.group_by) or "unknown" for m in meta]
+    try:
+        report = leave_one_group_out(X, y, groups, random_state=args.random_state)
+    except ValueError as e:
+        print(f"[FAIL] {e}")
+        return 1
+
+    print(f"\nLeave-one-{args.group_by}-out benchmark "
+          f"({report['n_samples']} samples, {report['n_groups']} groups, "
+          f"classes: {report['classes']})")
+    for group, stats in report["groups"].items():
+        line = f"  {group}: {stats['accuracy'] * 100:.1f}% (n={stats['n']})"
+        if stats["unseen_classes"]:
+            line += f"  [classes never seen in training: {stats['unseen_classes']}]"
+        print(line)
+    print(f"\n  Mean per-group accuracy: {report['mean_group_accuracy'] * 100:.1f}%")
+    print(f"  Pooled accuracy:         {report['pooled_accuracy'] * 100:.1f}%")
+
+    if args.save_dir:
+        save_dir = Path(args.save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
+        out_json = save_dir / "benchmark_report.json"
+        payload = dict(report)
+        payload["group_by"] = args.group_by
+        payload["data_dir"] = str(args.data)
+        with open(out_json, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+        print(f"\n[OK] Saved benchmark report: {out_json}")
     return 0
 
 
@@ -562,6 +667,43 @@ def build_parser() -> argparse.ArgumentParser:
     pv = sub.add_parser("validate", help="Validate data files against the schema")
     pv.add_argument("--data", default="data")
     pv.set_defaults(func=cmd_validate)
+
+    ping = sub.add_parser(
+        "ingest",
+        help="Convert a WAV recording into JSON samples (one per detected tap)",
+    )
+    ping.add_argument("wav", help="Path to a WAV recording containing one or more taps")
+    ping.add_argument("--material", required=True, help="Material label, e.g. oak_wood")
+    ping.add_argument("--device", required=True,
+                      help="Recording device, e.g. pixel7, iphone14, usb_mic")
+    ping.add_argument("--session", default=None,
+                      help="Session id (default: WAV filename stem)")
+    ping.add_argument("--out-dir", default=None,
+                      help="Output directory (default: data/<material>/)")
+    ping.add_argument("--excitation", default="manual_tap")
+    ping.add_argument("--source", default="microphone")
+    ping.add_argument("--threshold-ratio", type=float, default=0.25,
+                      help="Tap detection threshold as a fraction of the loudest event")
+    ping.add_argument("--min-separation", type=float, default=0.25,
+                      help="Minimum seconds between distinct taps")
+    ping.add_argument("--duration", type=float, default=0.5,
+                      help="Seconds to keep per tap")
+    ping.set_defaults(func=cmd_ingest)
+
+    pb = sub.add_parser(
+        "benchmark",
+        help="Leave-one-group-out evaluation (group by device/session/file)",
+    )
+    pb.add_argument("--data", default="data")
+    pb.add_argument("--group-by", choices=["device", "session", "file"],
+                    default="device",
+                    help="What counts as a held-out group (default: device)")
+    pb.add_argument("--random-state", type=int, default=42)
+    pb.add_argument("--save-dir", default=None,
+                    help="Directory to write benchmark_report.json")
+    _add_feature_flags(pb)
+    _add_preprocess_flags(pb)
+    pb.set_defaults(func=cmd_benchmark)
 
     pt = sub.add_parser("train", help="Train classifier from JSON data")
     pt.add_argument("--data", default="data")
