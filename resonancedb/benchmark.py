@@ -45,6 +45,7 @@ def leave_one_group_out(
     report: dict = {"groups": {}}
     all_true: list = []
     all_pred: list = []
+    all_groups: list = []
 
     for group in unique_groups:
         test_mask = groups_arr == group
@@ -70,6 +71,7 @@ def leave_one_group_out(
         }
         all_true.extend(y_true.tolist())
         all_pred.extend(y_pred.tolist())
+        all_groups.extend([group] * len(y_true))
 
     group_accs = [g["accuracy"] for g in report["groups"].values()]
     report["mean_group_accuracy"] = float(np.mean(group_accs))
@@ -77,4 +79,31 @@ def leave_one_group_out(
     report["n_samples"] = int(len(y))
     report["n_groups"] = len(unique_groups)
     report["classes"] = sorted(set(y.tolist()))
+
+    # A group whose material appears nowhere else scores 0% no matter how
+    # good the model is: there was nothing to learn that class from. Report
+    # those separately so a gap in the dataset is not misread as a model
+    # failure, and so it stays visible rather than being quietly dropped.
+    evaluable = {g: s for g, s in report["groups"].items() if not s["unseen_classes"]}
+    unevaluable = sorted(set(report["groups"]) - set(evaluable))
+    report["unevaluable_groups"] = unevaluable
+    report["n_evaluable_groups"] = len(evaluable)
+    if evaluable:
+        report["mean_evaluable_group_accuracy"] = float(
+            np.mean([s["accuracy"] for s in evaluable.values()])
+        )
+        ev_true, ev_pred = [], []
+        for t, p, g in zip(all_true, all_pred, all_groups):
+            if g in evaluable:
+                ev_true.append(t)
+                ev_pred.append(p)
+        report["pooled_evaluable_accuracy"] = float(accuracy_score(ev_true, ev_pred))
+    else:
+        report["mean_evaluable_group_accuracy"] = None
+        report["pooled_evaluable_accuracy"] = None
+
+    # Chance level for the evaluable classes, so the headline number can be
+    # read against something.
+    n_classes = len(report["classes"])
+    report["chance_accuracy"] = 1.0 / n_classes if n_classes else None
     return report

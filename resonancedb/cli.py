@@ -131,6 +131,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
             session=args.session,
             excitation=args.excitation,
             source=args.source,
+            striker=args.striker,
             threshold_ratio=args.threshold_ratio,
             min_separation_s=args.min_separation,
             duration_s=args.duration,
@@ -236,12 +237,33 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
           f"({report['n_samples']} samples, {report['n_groups']} groups, "
           f"classes: {report['classes']})")
     for group, stats in report["groups"].items():
-        line = f"  {group}: {stats['accuracy'] * 100:.1f}% (n={stats['n']})"
         if stats["unseen_classes"]:
-            line += f"  [classes never seen in training: {stats['unseen_classes']}]"
-        print(line)
-    print(f"\n  Mean per-group accuracy: {report['mean_group_accuracy'] * 100:.1f}%")
-    print(f"  Pooled accuracy:         {report['pooled_accuracy'] * 100:.1f}%")
+            names = ", ".join(str(c) for c in stats["unseen_classes"])
+            print(f"  {group}: not evaluable (n={stats['n']}), no {names} "
+                  "anywhere else to train on")
+        else:
+            print(f"  {group}: {stats['accuracy'] * 100:.1f}% (n={stats['n']})")
+
+    chance = report.get("chance_accuracy")
+    chance_txt = f"  (chance {chance * 100:.0f}%)" if chance else ""
+    if report["unevaluable_groups"]:
+        print(f"\n  {len(report['unevaluable_groups'])} group(s) could not be "
+              "evaluated: their material appears in no other group, so nothing "
+              "could be learned from it.")
+        print("  Record that material a second time, on another object or "
+              "device, to include it.")
+        if report["mean_evaluable_group_accuracy"] is not None:
+            print(f"\n  Mean accuracy over the {report['n_evaluable_groups']} "
+                  f"evaluable group(s): "
+                  f"{report['mean_evaluable_group_accuracy'] * 100:.1f}%{chance_txt}")
+            print(f"  Pooled over evaluable groups:    "
+                  f"{report['pooled_evaluable_accuracy'] * 100:.1f}%")
+        print(f"\n  Counting unevaluable groups as 0%, mean would be "
+              f"{report['mean_group_accuracy'] * 100:.1f}%")
+    else:
+        print(f"\n  Mean per-group accuracy: "
+              f"{report['mean_group_accuracy'] * 100:.1f}%{chance_txt}")
+        print(f"  Pooled accuracy:         {report['pooled_accuracy'] * 100:.1f}%")
 
     if args.save_dir:
         save_dir = Path(args.save_dir)
@@ -735,6 +757,12 @@ def build_parser() -> argparse.ArgumentParser:
                       help="Output directory (default: data/<material>/)")
     ping.add_argument("--excitation", default="manual_tap")
     ping.add_argument("--source", default="microphone")
+    ping.add_argument("--striker", default=None,
+                      help="What you tapped with, e.g. finger, key, pen, coin. "
+                           "Strongly recommended: a hard striker excites much "
+                           "higher frequencies than a fingertip, so leaving it "
+                           "unrecorded hides a variable that affects every "
+                           "comparison.")
     ping.add_argument("--threshold-ratio", type=float, default=0.25,
                       help="Tap detection threshold as a fraction of the loudest event")
     ping.add_argument("--min-separation", type=float, default=0.25,

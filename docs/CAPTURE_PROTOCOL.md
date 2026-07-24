@@ -17,9 +17,15 @@ A pilot dataset of at least:
 
 - Two or more recording devices. Any mix works: two phones, a phone and a
   laptop, a phone and a USB microphone. Note the exact model of each.
-- A striker. Use the same one for a whole session. Good options: a wooden
-  pencil (eraser end removed), a plastic pen cap, a teaspoon handle. Note
-  which one you used.
+- A striker. Use the same one for a whole session and **record it with
+  `--striker`**. Good options: a fingertip, a key, a wooden pencil, a plastic
+  pen cap, a teaspoon handle.
+
+  The striker matters more than it looks. A metal key excites far higher
+  frequencies than a fingertip, so if one material is only ever recorded
+  with a key, a model can learn the striker instead of the material. Vary
+  strikers across sessions of the same material, and always record which
+  one you used.
 - The objects to tap. For the pilot, aim for one clear object per material
   class, for example: a drinking glass, a wooden table, a metal pot, a
   plastic container, a ceramic mug.

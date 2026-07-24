@@ -178,6 +178,7 @@ def wav_to_samples(
     session: str | None = None,
     excitation: str = "manual_tap",
     source: str = "microphone",
+    striker: str | None = None,
     notes: str | None = None,
     threshold_ratio: float = 0.25,
     min_separation_s: float = 0.25,
@@ -209,5 +210,10 @@ def wav_to_samples(
             "session": session or stem,
             "notes": notes or f"tap {i}/{len(segments)} from {Path(wav_path).name}",
         }
+        # What struck the object changes the excitation a lot (a metal key
+        # excites far higher frequencies than a fingertip), so it has to be
+        # recorded or it becomes a hidden variable in every comparison.
+        if striker:
+            sample["striker"] = striker
         samples.append(sample)
     return samples

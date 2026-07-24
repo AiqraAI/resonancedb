@@ -127,8 +127,13 @@ def compute_feature_vector(signal: np.ndarray, sample_rate_hz: float, *, detrend
             base.extend(peaks)
 
         if 'ac_lag_s' in requested:
-            ac = np.correlate(x, x, mode='full')
-            ac = ac[len(x)-1:]  # lags >= 0
+            # FFT-based autocorrelation. np.correlate(..., 'full') is O(n^2),
+            # which on 0.5 s of 44.1 kHz audio is ~5e8 operations per sample
+            # and made feature extraction unusable on real recordings.
+            n = len(x)
+            nfft = 1 << (2 * n - 1).bit_length()
+            spec = np.fft.rfft(x, nfft)
+            ac = np.fft.irfft(spec * np.conj(spec), nfft)[:n]
             if len(ac) > 1:
                 lag_idx = int(np.argmax(ac[1:]) + 1)
                 lag_s = float(lag_idx / sample_rate_hz)
