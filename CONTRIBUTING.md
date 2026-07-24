@@ -4,32 +4,51 @@ We welcome contributions in:
 - Data
 - Code
 - Models
-- Hardware
 - Docs
 
 ## 🧪 Submit Data
 
-### Option 1: Real Sensor (ESP32 + MPU-6050)
-1. Flash firmware from `/firmware/esp32-tap-recorder`
-2. Record tap on a known material
-3. Save as JSON using the schema in `DATA_FORMAT.md`
-4. Submit via PR to `/data/`
+Data contributions are pull requests that add JSON files under
+`data/<material>/` (e.g. `data/oak_wood/phone_pixel7_20260724_01.json`).
 
-### Option 2: Simulated Data
-Use `python/simulate_tap.py` to generate synthetic samples.
+1. Record a tap — any audio recorder works today; a zero-install browser
+   capture page is coming (see [ROADMAP.md](ROADMAP.md) Phase 2).
+2. Format it per [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
+3. Check it locally: `resdb validate --data data`
+4. Open a PR — CI runs the same validation.
 
-### Option 3: Phone Sensors
-Use apps like **Phyphox** (Android/iOS) to record taps → export CSV → convert to JSON.
+Good contributions vary the conditions: different objects of the same
+material, different temperatures, thicknesses, and mounting — and, most
+valuable of all, **different recording devices**, because cross-device
+generalization is the project's central open question.
+
+Simulated data (`resdb simulate`) is for testing pipelines, not for the
+dataset — please don't submit it.
 
 ## 🛠️ Improve Code
-- Fix bugs
-- Add signal processing features
-- Optimize for microcontrollers
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
+
+Areas where help is most useful:
+- Signal processing and feature extraction (`resonancedb/features.py`,
+  `resonancedb/preprocess.py`)
+- The browser capture page (ROADMAP Phase 2 — Web Audio, static site)
+- Device/session-aware benchmarking (ROADMAP Phase 1)
+
+Please add a test for any behavior change.
 
 ## 🤖 Train Models
-- Use data to train classifiers
-- Save as `.tflite` and submit to `/models/`
 
-## 🧰 Share Hardware
-- Design 3D-printable mounts
-- Build low-power sensor nodes
+- Train and tune with `resdb train` / `resdb tune`; saved models embed their
+  feature configuration automatically.
+- Export portable models with `resdb export` (ONNX).
+- A public model zoo lands with ROADMAP Phase 4.
+
+## 📣 Spread the Word
+
+- Star the repo 🌟
+- Share on social media
+- Teach it in your lab or classroom

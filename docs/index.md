@@ -1,82 +1,115 @@
 # ResonanceDB Docs
 
-Your guide to installing, contributing data, training models, and exploring the dataset.
+Your guide to installing, contributing data, training models, and exploring
+the dataset.
 
 ## Getting Started
-- Create a virtual environment and install dependencies:
-  - `python -m venv .venv`
-  - `.venv\Scripts\Activate.ps1` (PowerShell on Windows)
-  - `pip install -r requirements.txt`
+
+```bash
+git clone https://github.com/AiqraAI/resonancedb.git
+cd resonancedb
+pip install -e ".[dev]"
+```
+
+This installs the `resonancedb` package and the `resdb` command.
 
 ## Data Schema
-- Read the schema in `docs/DATA_FORMAT.md`.
-- Required: `material`, `vibration[]` (g), `sample_rate_hz`, `excitation`, `source`.
-- Optional: `temperature_c`, `thickness_mm`, `load_g`, `mounting`, `device`, `notes`.
 
-## Record, Convert, and Validate
-1. Record with Phyphox or device of choice.
-2. Convert CSV → JSON using:
-   - `python scripts/phyphox_to_resonancedb.py "scripts/Raw Data.csv" wood data/phone_wood.json`
-3. Validate all JSON files:
-   - `python scripts/validate_data.py`
+- Read the schema in [DATA_FORMAT.md](DATA_FORMAT.md).
+- Required: `material`, `vibration[]`, `sample_rate_hz`, `excitation`, `source`.
+- Optional: `temperature_c`, `thickness_mm`, `load_g`, `mounting`, `device`, `notes`.
+- Validation rules live in `resonancedb.schema` — the single source of truth
+  for what a valid sample is.
+
+## Validate
+
+```bash
+resdb validate --data data
+```
+
+Exits non-zero if any file fails, so it can gate CI on data pull requests.
+
+## Simulate
+
+```bash
+resdb simulate --out-dir data/simulated
+```
+
+Writes one JSON sample per material (glass, wood, metal, plastic) in the
+standard format. The default 4 kHz simulation rate keeps every simulated
+resonance below Nyquist. Simulated data is for pipeline testing — don't
+submit it to the dataset.
 
 ## Train
-- Ensure you have at least a couple of samples (preferably multiple materials).
-- Train a baseline classifier:
-  - `python models/train_classifier.py`
-- Output: `models/material_model.pkl` (RandomForest)
 
-- CLI training:
-  - `python scripts/resdb.py train --data data --out models/material_model.pkl`
-  - Preprocess flags: `--target-length`, `--resample-rate-hz`, `--detrend/--no-detrend`, `--window/--no-window`
-  - Extra features: `--extra all`, `--top-k-peaks 3`
+```bash
+resdb train --data data --extra all --target-length 1024
+```
+
+- Preprocess flags: `--target-length`, `--resample-rate-hz`,
+  `--detrend/--no-detrend`, `--window/--no-window`
+- Extra features: `--extra all` (or a comma-separated subset), `--top-k-peaks 3`
+- Output: `models/material_model.pkl` — a package containing the model AND
+  the feature configuration it was trained with, so prediction always
+  reproduces the same pipeline.
 
 ## Predict
-- Quick demo:
-  - `python demo.py` (uses `data/test_wood.json` by default)
-- Or run the predictor on a file:
-  - `python models/predict.py` (edit the `__main__` path or import and call)
 
-- CLI prediction:
-  - `python scripts/resdb.py predict data/test_wood.json --model models/material_model.pkl`
-  - Uses saved model configuration automatically unless overridden by flags.
+```bash
+resdb predict data/simulated/glass.json
+```
 
-## Simulation
-- Generate synthetic taps:
-  - `python python/simulate_tap.py`
-- Files saved to `data/simulated/*.npz` with metadata for frequency and damping.
+Uses the configuration embedded in the saved model automatically; CLI flags
+override it (with a shape-mismatch fallback to the saved config).
 
-## Features (Shared)
-- Unified feature extraction lives in `python/features.py` and is used by training, prediction, and the demo.
-- Current vector: `[peak_freq, decay_rate, energy]` with optional preprocessing (detrend + Hann window).
+## Evaluate, Tune, Inspect, Export
 
-- Preprocessing: detrend, Hann window, optional length normalization and resampling.
+```bash
+resdb evaluate --model models/material_model.pkl --data data
+resdb tune --data data --cv 2 --n-estimators 10,50 --max-depth None,5 --extra all
+resdb inspect --model models/material_model.pkl
+resdb export --model models/material_model.pkl --verify
+```
 
-## CLI — Inspect, Evaluate, Tune
-- Inspect model metadata:
-  - `python scripts/resdb.py inspect --model models/material_model.pkl`
-- Evaluate on dataset:
-  - `python scripts/resdb.py evaluate --model models/material_model.pkl --data data --save-dir models --save-confusion-matrix`
-  - Saves `eval_report.json` and `confusion_matrix.png`.
-- Tune hyperparameters (k-fold CV):
-  - `python scripts/resdb.py tune --data data --out models/material_model.pkl --cv 2 --n-estimators 10,50 --max-depth None,5 --max-features sqrt --extra all --top-k-peaks 3`
+- `evaluate` writes `eval_report.json` (and `confusion_matrix.png` when
+  matplotlib is installed: `pip install "resonancedb[plots]"`).
+- `export` produces ONNX and requires `pip install "resonancedb[export]"`.
+  TFLite is not supported for scikit-learn models — use ONNX.
 
-## Export (ONNX)
-- Export trained model to ONNX for portability:
-  - `python scripts/resdb.py export --model models/material_model.pkl --out models/material_model.onnx --verify`
-- Requires `skl2onnx`, `onnx`, and `onnxruntime` (already in `requirements.txt`).
-- TFLite: scikit‑learn `RandomForest` cannot be exported directly. Use ONNX or retrain with TensorFlow/Keras for TFLite.
+## Feature Vector
+
+Feature extraction lives in `resonancedb/features.py` and is shared by
+training, evaluation, and prediction.
+
+- Base: `[peak_freq, decay_rate, energy]`
+- Extras (`extra=True`): `spectral_centroid`, `spectral_bandwidth`, `zcr`,
+  top-k FFT peak frequencies, autocorrelation lag
+- Preprocessing (`resonancedb/preprocess.py`): mean detrend, Hann window,
+  optional length normalization and resampling. When a signal is resampled,
+  all frequency-dependent features use the effective post-resample rate.
 
 ## Notebooks
-- Analyze simulated taps: `examples/01-analyze-tap-simulation.ipynb.ipynb`
-- Dataset overview: `examples/02-dataset-overview.ipynb` (scans `data/`, computes features, and plots histograms).
+
+- Analyze simulated taps: `examples/01-analyze-tap-simulation.ipynb`
+- Dataset overview: `examples/02-dataset-overview.ipynb`
 - If you need Jupyter: `pip install jupyter`
 
 ## Contribution & Governance
-- Follow `CONTRIBUTING.md` to add data and improvements.
-- Prefer file naming like: `material_source_device_YYYYMMDD_session.json`.
-- Always run `scripts/validate_data.py` before submitting.
+
+- Follow [../CONTRIBUTING.md](../CONTRIBUTING.md) to add data and improvements.
+- Data lives under `data/<material>/`; prefer file naming like
+  `source_device_YYYYMMDD_session.json`.
+- Always run `resdb validate --data data` before submitting.
+
+## Phone capture (legacy)
+
+The phyphox CSV converter (`scripts/phyphox_to_resonancedb.py`, requires
+`pip install "resonancedb[phone]"`) is kept as a legacy path for
+contact-vibration data. The primary capture path going forward is
+microphone-based — see [../ROADMAP.md](../ROADMAP.md) Phase 2.
 
 ## Tips
-- Phone data may have lower `sample_rate_hz` (~100 Hz); it still works but features are noisier. Consider multiple taps per session.
-- For FFT, the signal should contain the tap event; trimming around the largest spike improves consistency.
+
+- The signal should contain the tap event; trimming around the largest spike
+  improves consistency.
+- Record several taps per object/session — variation is data.
