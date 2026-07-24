@@ -1,6 +1,6 @@
 import numpy as np
-from python.features import compute_feature_vector
-from python.simulate_tap import simulate_tap
+from resonancedb.features import compute_feature_vector
+from resonancedb.simulate import simulate_tap
 
 
 def test_peak_frequency_matches_simulated():
@@ -28,6 +28,20 @@ def test_deterministic_same_input():
     v1 = compute_feature_vector(sig, sr)
     v2 = compute_feature_vector(sig, sr)
     assert np.allclose(v1, v2)
+
+
+def test_peak_frequency_correct_after_resampling():
+    """Regression: frequency features must use the post-resample rate.
+
+    A 300 Hz signal recorded at 1000 Hz and resampled to 800 Hz must still
+    report ~300 Hz. The old code computed FFT bins with the original rate,
+    reporting 300 * (1000/800) = 375 Hz.
+    """
+    sr = 1000
+    freq = 300.0
+    sig = simulate_tap(freq, damping=1.0, duration=2.0, sample_rate=sr)
+    vec = compute_feature_vector(sig, sr, resample_rate_hz=800.0)
+    assert abs(vec[0] - freq) < 10.0
 
 
 def test_detrend_removes_dc_offset():

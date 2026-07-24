@@ -2,18 +2,6 @@ import numpy as np
 from .preprocess import PreprocessConfig, run_pipeline
 
 
-def _apply_window(signal: np.ndarray, window: str | bool | None) -> np.ndarray:
-    if window is None or window is False:
-        return signal
-    if not isinstance(window, str):
-        return signal  # Skip if not a string
-    if window.lower() == "hann":
-        w = np.hanning(len(signal))
-        return signal * w
-    # Fallback: no window
-    return signal
-
-
 def preprocess(signal: np.ndarray, sample_rate_hz: float, *, detrend: bool = True, window: str | None = "hann",
                target_length: int | None = None, resample_rate_hz: float | None = None) -> np.ndarray:
     """Preprocess with optional mean removal, windowing, length normalization, and resampling."""
@@ -33,10 +21,16 @@ def compute_feature_vector(signal: np.ndarray, sample_rate_hz: float, *, detrend
     Extra names supported: 'spectral_centroid', 'spectral_bandwidth', 'zcr', 'top_peaks', 'ac_lag_s'.
     """
     if config is None:
-        x = preprocess(signal, sample_rate_hz, detrend=detrend, window=window,
-                       target_length=target_length, resample_rate_hz=resample_rate_hz)
-    else:
-        x = run_pipeline(signal, sample_rate_hz, config)
+        config = PreprocessConfig(detrend=detrend, window=window,
+                                  target_length=target_length, resample_rate_hz=resample_rate_hz)
+    x = run_pipeline(signal, sample_rate_hz, config)
+
+    # If the pipeline resampled the signal, every rate-dependent feature
+    # (FFT frequency bins, ZCR, autocorrelation lag) must use the effective
+    # post-resample rate, not the original one — otherwise frequencies are
+    # scaled by original/resampled and differ per source device.
+    if config.resample_rate_hz is not None and config.resample_rate_hz > 0:
+        sample_rate_hz = config.resample_rate_hz
 
     # FFT-based dominant frequency (first half of spectrum)
     fft_vals = np.abs(np.fft.fft(x))
@@ -93,9 +87,21 @@ def compute_feature_vector(signal: np.ndarray, sample_rate_hz: float, *, detrend
             base.append(bandwidth)
 
         if 'zcr' in requested:
+            # Proper zero-crossing rate calculation
+            # Count zero crossings including when signal passes through zero
+            # A crossing occurs when signal goes from positive to negative or vice versa
             signs = np.sign(x)
-            signs[signs == 0] = 1  # treat zeros as no crossing
-            zc = np.sum(signs[1:] != signs[:-1])
+            # Replace zeros with previous non-zero sign (hold last value)
+            # This handles the case where signal exactly hits zero
+            for i in range(1, len(signs)):
+                if signs[i] == 0:
+                    signs[i] = signs[i - 1]
+            # If first value is zero, use sign of second
+            if signs[0] == 0 and len(signs) > 1:
+                signs[0] = signs[1]
+            # Count sign changes (+1 to -1 or -1 to +1)
+            diff = np.diff(signs)
+            zc = np.sum(np.abs(diff) == 2)
             zcr = float(zc / len(x) * sample_rate_hz)
             base.append(zcr)
 

@@ -1,5 +1,5 @@
 import json
-from scripts.validate_data import validate_sample
+from resonancedb.schema import validate_sample
 
 
 def test_validate_good(tmp_path):
