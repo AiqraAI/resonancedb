@@ -179,6 +179,20 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         written += 1
 
     print(f"\n{written} tap(s) written from {wav_path.name}")
+
+    # Clipping destroys exactly the spectral detail that distinguishes hard
+    # ringing materials from each other, and it cannot be undone afterwards.
+    # Warn now, while re-recording is still cheap.
+    clipped = sum(1 for s in samples
+                  if max(abs(v) for v in s["vibration"]) >= 0.99)
+    if clipped:
+        pct = 100 * clipped / len(samples)
+        print(f"[WARN] {clipped} of {len(samples)} taps ({pct:.0f}%) are clipped "
+              "(they hit full scale).")
+        print("       Clipping adds false harmonics and erases the detail that "
+              "separates ringing materials.")
+        print("       Re-record further from the object or tapping more gently, "
+              "then ingest with --force.")
     return 0 if written else 1
 
 
