@@ -124,3 +124,28 @@ and sidesteps the problem Phase 1 exposed.
   of this package
 - Hardware reference rig, redesigned around an I2S microphone or piezo + ADC
   (not the MPU-6050), as the calibrated instrument for serious contributors
+
+- **Quantitative structural measurement.** Parked 2026-07-26, worth revisiting
+  once the corpus is larger. The physics is established and the opportunity is
+  cost and scale rather than novelty:
+  - *Impact echo* (ASTM C1383) already recovers slab thickness and locates
+    voids and delamination from a tap on concrete. Existing gear costs
+    thousands and needs a trained operator; a phone plus a cheap instrumented
+    striker could be far cheaper. Smallest first experiment: tap a floor of
+    known thickness and check the reflection frequency against the standard.
+  - *Finite element model updating* is the realistic version of "tap an object,
+    get CAD". Recovering geometry from scratch is provably impossible in
+    general (Kac 1966, "Can One Hear the Shape of a Drum?", answered no by
+    Gordon, Webb and Wolpert in 1992: distinct shapes can share a spectrum),
+    and a tap yields perhaps twenty numbers against a CAD model's thousands of
+    degrees of freedom. With a parametric prior it inverts well, so tapping is
+    an excellent parameter estimator (wall thickness, stiffness, boundary
+    conditions) and a hopeless shape reconstructor.
+  - Three gaps in the current setup, in order of value: the input force is
+    unmeasured (a piezo in the striker gives a true frequency response
+    function and removes tap-force variation), a single microphone captures
+    one point rather than a mode shape, and radiated sound misses modes that
+    couple poorly to air.
+  - Note that a hand tap excites local element modes, not a building's global
+    modes (0.1 to 10 Hz), so building-scale work means many taps mapped across
+    a grid, which is what hammer sounding surveys do manually today.
