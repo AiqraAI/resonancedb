@@ -51,6 +51,76 @@ A pilot dataset of at least:
   dataset as air-recorded ones.
 - Pick a quiet room. Fridges, fans, and traffic all raise the noise floor.
 
+## Technique that matters (and how much)
+
+Measured on the pilot data, recording technique is **hygiene, not the main
+lever**. Sessions with good levels still scored 0 percent when their object
+was acoustically unrepresentative of its material, and mean accuracy for
+"good level" sessions (47.4 percent) was no better than for quiet ones
+(47.2 percent). Only clipping showed a clear penalty (34.6 percent).
+
+So: avoid the two demonstrated ways to ruin a recording, follow the rest as
+sensible defaults, and spend your real effort on **more and more varied
+objects**, which is the lever the learning curve actually shows.
+
+### The two things that genuinely ruin a recording
+
+1. **Never rest the phone on the object you are tapping.** Vibration couples
+   through the phone body and you measure contact rumble instead of sound.
+   The first pilot session was discarded for exactly this.
+2. **Never let it clip.** A session recorded at full scale scored 0 percent;
+   the same pan re-recorded cleanly scored 100 percent. `resdb ingest` warns
+   you, and `resdb summary` shows the level per session. Aim roughly 0.2 to
+   0.6.
+
+### The striker
+
+- Use something **hard, small and low-ringing**: a coin, a hard plastic pen
+  cap, the wooden end of a pencil. Hard strikers excite the object's higher
+  modes, which is where much of the distinguishing detail lives.
+- **A fingertip is a poor striker** for hard materials. It is soft, it damps
+  the object on contact, and it varies with pressure and angle. In the pilot,
+  a key on a glass bottle excited a 7088 Hz mode that finger taps on glass
+  never reached at all.
+- **Avoid metal on metal.** The striker rings too and contaminates the
+  recording. Tap metal with hard plastic or wood instead.
+- **Let the striker rebound freely.** Holding contact after impact damps the
+  ring and changes the signature.
+- **Use the same striker** for everything you intend to compare, and record it
+  with `--striker`.
+
+### Where on the object to tap
+
+- Tap the **middle of a face or panel**, away from edges, corners, screws and
+  anywhere it is supported. Those places are damped and give a weak,
+  inconsistent ring.
+- **Mark one spot and use it for the whole session.** Different spots on a
+  large object excite different modes and produce genuinely different sounds.
+- To capture spot-to-spot variety, record a **second session** at a different
+  spot with a different `--session` name. Consistency within a session,
+  variety across sessions.
+
+### How the object is held or supported
+
+This changes the sound as much as the material does. A spoon held in your
+hand is heavily damped by your hand; the same spoon resting on a table rings
+very differently.
+
+- Prefer to **place the object rather than hold it**, resting naturally the
+  way it is normally used.
+- If you must hold it, hold the same way every time, and pinch it at an edge
+  rather than wrapping your hand around it.
+- Note it in `mounting` so the condition is recorded.
+
+### Phone position
+
+- **Held in the air** in your free hand, bottom edge (the microphone) pointed
+  at the tap point.
+- **10 to 20 cm** away. Closer for quiet objects like concrete, so the tap
+  sits well above ambient noise.
+- Keep the distance and angle **roughly constant within a session**.
+- Keep fingers clear of the microphone port.
+
 ## Procedure (one session = one material on one device)
 
 1. Place the object the way it is normally used (glass standing on a table,
