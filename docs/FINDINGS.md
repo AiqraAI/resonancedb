@@ -53,11 +53,45 @@ percent (Metalspoonkey, peak level 1.00). The same pan re-recorded without
 clipping scored 100 percent. `resdb ingest` now warns about clipping and
 `resdb summary` flags it per session.
 
-**More objects help, but slowly.** Going from 12 to 14 objects moved 4-class
-accuracy from 43.5 to 45.9 percent. Extrapolating, useful cross-object material
-identification would need many tens of objects per material, well beyond what
-one person collects in a week. This is an argument for the open collaborative
-dataset, not against it.
+## How much would more data help? (measured)
+
+Rather than guess, the learning curve was measured directly by subsampling the
+existing objects. For each material, one object is held out and the model is
+trained on everything else plus a varying number of *other* objects of that
+same material. Every other variable is held constant, so the only thing
+changing is how many examples of the material the model has seen.
+
+Recall on a **new, unseen object** of that material:
+
+| material | 1 other object | 2 | 3 | 4 | gain per object |
+|---|---|---|---|---|---|
+| wood | 33.9% | 75.6% | | | +41.7 pts |
+| glass | 13.6% | 29.5% | 56.7% | | +21.6 pts |
+| metal | 9.1% | 18.9% | 28.1% | 33.7% | +8.2 pts |
+
+**Every material improves monotonically, and none has plateaued.** This is the
+steep part of the curve, not the flat part. More objects per material clearly
+help, and the current dataset is simply undersupplied.
+
+The gain per object tracks how *similar* the objects within a material are:
+
+- wood (two tables and a wardrobe, all large flat panels) learns fastest
+- metal (a spoon, a pan, a tray) learns slowest, because a hand-held spoon and
+  a pan share almost nothing acoustically
+
+So the requirement is not just more objects but more objects *spanning the
+variety* of the material. Adding five more spoons would teach the model
+"spoon", not "metal".
+
+A caveat on precision: with only 3 to 5 objects per material there are few
+combinations to average over, so the absolute numbers are noisy and the slopes
+should not be extrapolated far. The direction and consistency across three
+independent materials is the reliable part.
+
+**Revision to the conclusion above:** cross-object material identification is
+undersupplied rather than unreachable, and the supply needed looks reachable.
+Roughly 10 objects per material, about 40 objects in total, is a few recording
+sessions rather than a research programme.
 
 ## Implications
 

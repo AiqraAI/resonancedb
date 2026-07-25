@@ -59,13 +59,19 @@ reproducible across devices and sessions well enough to classify materials.*
 
 Geometry and mounting dominate the acoustic signature: glass objects in this
 dataset span 202 to 7088 Hz, a wider range than the gap between materials.
-Richer features were tested and did not help. Cross-object material ID needs
-an order of magnitude more objects than one person can collect, which is an
-argument for the collaborative dataset, not against it.
+Richer features were tested and did not help.
 
-**Gate decision: the original premise is not supported at this scale, and the
-93 percent object fingerprint points at a capability that works today.** The
-plan below is reordered accordingly.
+A measured learning curve then showed the shortfall is supply, not ceiling.
+Holding out one object and varying how many other objects of its material are
+in training, recall on a new unseen object rises monotonically for every
+material and has not plateaued: wood 33.9 to 75.6 percent over 2 objects,
+glass 13.6 to 56.7 over 3, metal 9.1 to 33.7 over 4. Gain per object tracks
+how varied the objects are, so metal (spoon, pan, tray) learns slowest.
+
+**Gate decision: continue.** Material ID is undersupplied rather than
+unreachable, and roughly 10 objects per material looks like a few recording
+sessions. Same-object change detection is promoted in parallel because it
+works at today's data volume and needs no cross-object generalization.
 
 ## Phase 2: Zero-install capture page
 
