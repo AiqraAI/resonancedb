@@ -37,22 +37,35 @@ Guiding decisions:
 
 **Acceptance:** fresh clone → `pip install -e .[dev] && pytest && resdb --help` works.
 
-## Phase 1: Validate the science (go/no-go gate)
+## Phase 1: Validate the science (go/no-go gate)  DONE
 
 The riskiest assumption in the whole project: *tap signatures are
 reproducible across devices and sessions well enough to classify materials.*
 
 - [x] Audio support in the package: WAV loading, tap onset detection, trim
       (`resonancedb/audio.py`, `resdb ingest`)
-- [x] A written capture protocol (materials, tap count, mounting, distance,
-      device notes): [docs/CAPTURE_PROTOCOL.md](docs/CAPTURE_PROTOCOL.md)
-- [ ] Pilot dataset: ≥5 materials × ≥30 taps × ≥2 recording devices
-- [x] `resdb benchmark`: leave-one-group-out evaluation by **device/session/file**,
-      never random splits
-- [ ] Publish the honest number
+- [x] A written capture protocol: [docs/CAPTURE_PROTOCOL.md](docs/CAPTURE_PROTOCOL.md)
+- [x] Pilot dataset: 411 taps, 14 objects, 4 materials, 1 device
+- [x] `resdb benchmark`: leave-one-group-out evaluation, never random splits
+- [x] Publish the honest number: [docs/FINDINGS.md](docs/FINDINGS.md)
 
-**Gate:** cross-device accuracy meaningfully above chance → continue.
-Near chance → pivot toward fixed-sensor structural monitoring.
+**Result: a tap identifies the object, not the material.**
+
+| Question | Accuracy | Chance |
+|---|---|---|
+| Which object is this tap from? | **93.0%** | 7.1% |
+| Which material, on an unseen object? | 45.9% | 25% |
+| Damped or ringing, on an unseen object? | 75.7% | 50% |
+
+Geometry and mounting dominate the acoustic signature: glass objects in this
+dataset span 202 to 7088 Hz, a wider range than the gap between materials.
+Richer features were tested and did not help. Cross-object material ID needs
+an order of magnitude more objects than one person can collect, which is an
+argument for the collaborative dataset, not against it.
+
+**Gate decision: the original premise is not supported at this scale, and the
+93 percent object fingerprint points at a capability that works today.** The
+plan below is reordered accordingly.
 
 ## Phase 2: Zero-install capture page
 
@@ -74,7 +87,22 @@ Near chance → pivot toward fixed-sensor structural monitoring.
       `load_dataset("aiqra/resonancedb")`)
 - [ ] Finalize the data license (leaning CC-BY for maximum adoption)
 
-## Phase 4: Model zoo + browser demo
+## Phase 4: Same-object change detection (promoted from the Phase 1 finding)
+
+The 93 percent object fingerprint means a tap can tell one object from
+another. The natural product question is therefore not "what is this made of"
+but "has this object changed since last time", which holds geometry constant
+and sidesteps the problem Phase 1 exposed.
+
+- [ ] `resdb baseline` and `resdb compare`: record a reference signature for a
+      specific object, then score how far a later recording deviates from it
+- [ ] Establish the noise floor: how much does an unchanged object drift
+      between sessions, days, temperatures, and phone positions
+- [ ] Demonstrate a real detectable change (a cracked tile versus an intact
+      one, a loose versus tightened fixing)
+- [ ] Only then decide whether this is the product
+
+## Phase 5: Model zoo + browser demo
 
 - [ ] Train/tune on the real dataset; publish ONNX models to Hugging Face Hub
       with the cross-device benchmark attached
@@ -83,7 +111,7 @@ Near chance → pivot toward fixed-sensor structural monitoring.
 - [ ] Model cards documenting training config (the config embedded in each
       model package)
 
-## Phase 5: Parked until demand exists
+## Phase 6: Parked until demand exists
 
 - Hosted API / web platform (separate repo: resonancedb-web), revive only
   when a concrete consumer needs server-side inference, and rebuild it on top
