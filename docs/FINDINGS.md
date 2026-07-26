@@ -93,6 +93,66 @@ undersupplied rather than unreachable, and the supply needed looks reachable.
 Roughly 10 objects per material, about 40 objects in total, is a few recording
 sessions rather than a research programme.
 
+### That prediction was tested and it was wrong
+
+The learning curve above predicted that adding objects would keep improving
+recall. Two further collection rounds tested it directly and it did not hold.
+
+**Balanced accuracy against the number of objects:**
+
+| Objects | Taps | Balanced accuracy | Majority baseline |
+|---|---|---|---|
+| 14 | 411 | ~48.9% | ~36% |
+| 26 | 767 | 43.4% | 50.0% |
+| 32 | 945 | **40.9%** | 40.6% |
+
+It is flat to declining, not rising, and at 32 objects the model is 0.3 points
+above always guessing the commonest class.
+
+Why the curve misled: it subsampled objects from a pool already in the dataset,
+so "fewer objects" still meant objects of the same few kinds. Genuinely new
+objects (a spatula, a light bulb, a chair leg) add within-class variance faster
+than they add learnable signal. Subsampling an existing pool measures
+something easier than real generalization, and it should not have been
+extrapolated.
+
+### Representations tested, all at or below the trivial baseline
+
+| Representation | Balanced accuracy |
+|---|---|
+| Hand-crafted features (current) | 40.9% |
+| Hilbert damping, per-band damping, spectral shape | 36.0% (at 26 objects) |
+| **MFCCs** (the standard audio-ML representation), 80 dims | **29.6%** |
+| Always guess the commonest class | 40.6% |
+| Chance | 25.0% |
+
+MFCCs largely collapsed to predicting metal (75.3% metal recall, 2.3%
+concrete, 6.7% wood). Three qualitatively different representations, none of
+which beats guessing.
+
+### A confound that inflated an earlier round
+
+At 26 objects, metal recall read 70.2% and eight metal objects scored ~100%.
+That was substantially an artifact: 8 of 12 sessions using the high-impact
+plastic striker were metal, so "plastic striker" predicted "metal" 67% of the
+time. Non-metal plastic-struck objects were misclassified *as metal*
+specifically (WoodenSlab 26/30, Wall4 29/30, GlassWindow 28/30).
+
+Adding plastic-struck wood and glass reduced the shortcut to 44%, and metal
+recall promptly fell from 70.2% to 42.6%. The earlier metal result was mostly
+the striker, not the material.
+
+## Verdict
+
+Across 32 objects, 945 taps, three feature representations and three
+collection rounds, **cross-object material classification does not work with
+this approach**. It is not marginally short, it is at the level of guessing
+the most common class. More data of the same kind has now been tried twice and
+made the honest metric worse rather than better.
+
+The object-identification result (93%) stands unchallenged and is the
+capability worth building on.
+
 ## Implications
 
 The original premise, "tap any object and learn what it is made of", is not

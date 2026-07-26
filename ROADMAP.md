@@ -68,10 +68,19 @@ material and has not plateaued: wood 33.9 to 75.6 percent over 2 objects,
 glass 13.6 to 56.7 over 3, metal 9.1 to 33.7 over 4. Gain per object tracks
 how varied the objects are, so metal (spoon, pan, tray) learns slowest.
 
-**Gate decision: continue.** Material ID is undersupplied rather than
-unreachable, and roughly 10 objects per material looks like a few recording
-sessions. Same-object change detection is promoted in parallel because it
-works at today's data volume and needs no cross-object generalization.
+That "undersupplied" reading was then tested over two more collection rounds
+and did not survive. At 32 objects and 945 taps, balanced accuracy is 40.9
+percent against a 40.6 percent baseline of always guessing the commonest
+class, and the trend across 14, 26 and 32 objects is flat to declining. Three
+representations were tried, including MFCCs, the standard audio-ML choice,
+which scored 29.6 percent. An apparent metal success at 26 objects turned out
+to be a striker confound and evaporated once it was broken.
+
+**Gate decision: pivot.** Cross-object material classification is not
+supported by the evidence, and two rounds of more data made the honest metric
+worse rather than better. The 93 percent object fingerprint is the result that
+holds, so same-object change detection becomes the primary direction. See
+[docs/FINDINGS.md](docs/FINDINGS.md).
 
 ## Phase 2: Zero-install capture page
 
