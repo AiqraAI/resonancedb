@@ -176,6 +176,7 @@ def wav_to_samples(
     *,
     device: str = "unknown",
     session: str | None = None,
+    obj: str | None = None,
     excitation: str = "manual_tap",
     source: str = "microphone",
     striker: str | None = None,
@@ -215,5 +216,10 @@ def wav_to_samples(
         # recorded or it becomes a hidden variable in every comparison.
         if striker:
             sample["striker"] = striker
+        # Which physical thing this is, as distinct from which recording
+        # occasion. Needed to ask whether an object's signature survives
+        # across sessions, devices and time.
+        if obj:
+            sample["object"] = obj
         samples.append(sample)
     return samples

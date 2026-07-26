@@ -129,6 +129,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
             args.material.lower(),
             device=args.device,
             session=args.session,
+            obj=args.object,
             excitation=args.excitation,
             source=args.source,
             striker=args.striker,
@@ -265,6 +266,9 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
               f"{sorted(set(y.tolist()))}. A single-class benchmark would "
               "score 100% while proving nothing. Record more materials first.")
         return 1
+
+    if args.label_by == "object":
+        y = np.array([m.get("object") or "unknown" for m in meta])
 
     groups = [m.get(args.group_by) or "unknown" for m in meta]
     try:
@@ -809,7 +813,12 @@ def build_parser() -> argparse.ArgumentParser:
     ping.add_argument("--device", required=True,
                       help="Recording device, e.g. pixel7, iphone14, usb_mic")
     ping.add_argument("--session", default=None,
-                      help="Session id (default: WAV filename stem)")
+                      help="Session id, one recording occasion (default: WAV filename stem)")
+    ping.add_argument("--object", default=None,
+                      help="Which physical object this is, e.g. kitchen_table. "
+                           "Distinct from --session: record the same object on "
+                           "two occasions with the same --object and different "
+                           "--session to test whether its signature is stable.")
     ping.add_argument("--out-dir", default=None,
                       help="Output directory (default: data/<material>/)")
     ping.add_argument("--excitation", default="manual_tap")
@@ -853,6 +862,10 @@ def build_parser() -> argparse.ArgumentParser:
     pb.add_argument("--group-by", choices=["device", "session", "file"],
                     default="device",
                     help="What counts as a held-out group (default: device)")
+    pb.add_argument("--label-by", choices=["material", "object"], default="material",
+                    help="What the model predicts. 'object' asks whether an "
+                         "object's signature is recognisable in a different "
+                         "session or on a different device (default: material)")
     pb.add_argument("--random-state", type=int, default=42)
     pb.add_argument("--save-dir", default=None,
                     help="Directory to write benchmark_report.json")

@@ -98,6 +98,9 @@ def load_data(
             "file": file_path.name,
             "device": data.get("device") or "unknown",
             "session": data.get("session") or file_path.stem,
+            # Falls back to session so pre-existing data still loads: for
+            # those, one object was one session.
+            "object": data.get("object") or data.get("session") or file_path.stem,
             "source": data.get("source") or "unknown",
         })
         log(f"[OK] {file_path.name}: {data['material']} | "

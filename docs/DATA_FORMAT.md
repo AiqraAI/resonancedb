@@ -22,6 +22,7 @@ All contributions must follow this JSON schema.
 | `mounting` | string | e.g., `clamped`, `free_edge`, `on_table` |
 | `device` | string | Recording device: `pixel7`, `iphone14`, `usb_mic`, `ESP32+MPU6050`, etc. Used by `resdb benchmark --group-by device` |
 | `session` | string | Recording session id (one session = one material on one device in one sitting). Used by `resdb benchmark --group-by session` |
+| `object` | string | Which physical object this is, e.g. `kitchen_table`. Distinct from `session`: the same object recorded on two occasions shares an `object` but has different `session` values. Used by `resdb benchmark --label-by object` to test whether a signature is stable over time and across devices |
 | `striker` | string | What struck the object: `finger`, `key`, `pen`, `coin`. A hard striker excites much higher frequencies than a fingertip, so an unrecorded striker becomes a hidden variable in every comparison |
 
 ## 📂 Example
