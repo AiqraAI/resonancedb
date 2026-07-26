@@ -151,11 +151,15 @@ def cmd_ingest(args: argparse.Namespace) -> int:
 
     session = samples[0]["session"]
 
-    # Guard against silently overwriting a different recording. Sample
-    # filenames are built from material/device/session, so re-using those
-    # labels for a second recording would replace the first one's taps and
-    # leave a mix of two objects under one label.
-    prefix = f"{args.material.lower()}_{args.device}_{session}_tap"
+    # The object must be part of the filename. Without it, two different
+    # objects of the same material recorded on the same device in the same
+    # session collide, and --force silently replaces one with the other.
+    obj_part = f"{args.object}_" if args.object else ""
+
+    # Guard against silently overwriting a different recording. Re-using the
+    # same labels for a second recording would replace the first one's taps
+    # and leave a mix of two recordings under one label.
+    prefix = f"{args.material.lower()}_{args.device}_{obj_part}{session}_tap"
     existing = sorted(out_dir.glob(f"{prefix}*.json"))
     if existing and not args.force:
         print(f"[FAIL] {len(existing)} sample(s) already exist for "
@@ -172,7 +176,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         if errors:
             print(f"[SKIP] tap {i}: {'; '.join(errors)}")
             continue
-        out_path = out_dir / f"{args.material.lower()}_{args.device}_{session}_tap{i:02d}.json"
+        out_path = out_dir / f"{args.material.lower()}_{args.device}_{obj_part}{session}_tap{i:02d}.json"
         with out_path.open("w", encoding="utf-8") as f:
             json.dump(sample, f)
         print(f"[OK] {out_path} ({len(sample['vibration'])} samples "
