@@ -106,4 +106,39 @@ def leave_one_group_out(
     # read against something.
     n_classes = len(report["classes"])
     report["chance_accuracy"] = 1.0 / n_classes if n_classes else None
+
+    # Plain accuracy flatters an imbalanced dataset: if most groups share one
+    # class, a model that always guesses that class scores well while having
+    # learned nothing. Report per-class recall, its unweighted mean (balanced
+    # accuracy), and what always guessing the commonest class would score.
+    group_class = {}
+    for group in unique_groups:
+        mask = groups_arr == group
+        group_class[group] = y[mask][0]
+
+    per_class: dict = {}
+    for group, stats in evaluable.items():
+        per_class.setdefault(str(group_class[group]), []).append(stats["accuracy"])
+    report["per_class_recall"] = {
+        c: float(np.mean(v)) for c, v in sorted(per_class.items())
+    }
+    report["balanced_accuracy"] = (
+        float(np.mean(list(report["per_class_recall"].values())))
+        if per_class else None
+    )
+
+    # Leave-one-group-out majority baseline: for each held-out group, guess the
+    # commonest class among the remaining groups.
+    baseline = []
+    for group in unique_groups:
+        others = [group_class[g] for g in unique_groups if g != group]
+        if not others:
+            continue
+        counts: dict = {}
+        for c in others:
+            counts[c] = counts.get(c, 0) + 1
+        majority = max(counts, key=counts.get)
+        baseline.append(1.0 if group_class[group] == majority else 0.0)
+    report["majority_baseline"] = float(np.mean(baseline)) if baseline else None
+
     return report

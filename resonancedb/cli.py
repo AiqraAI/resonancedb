@@ -305,6 +305,23 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
               f"{report['mean_group_accuracy'] * 100:.1f}%{chance_txt}")
         print(f"  Pooled accuracy:         {report['pooled_accuracy'] * 100:.1f}%")
 
+    if report.get("per_class_recall"):
+        print("\n  Per-class recall:")
+        for c, v in report["per_class_recall"].items():
+            print(f"    {c:12s} {v * 100:5.1f}%")
+        bal = report["balanced_accuracy"]
+        base = report.get("majority_baseline")
+        print(f"\n  Balanced accuracy (mean over classes): {bal * 100:.1f}%")
+        if base is not None:
+            print(f"  Always guessing the commonest class:   {base * 100:.1f}%")
+            headline = report.get("mean_evaluable_group_accuracy")
+            if headline is None:
+                headline = report["mean_group_accuracy"]
+            if headline <= base + 0.05:
+                print("\n  [WARN] The model barely beats that trivial baseline. "
+                      "Plain accuracy is being flattered by class imbalance; "
+                      "read the balanced accuracy instead.")
+
     if args.save_dir:
         save_dir = Path(args.save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
